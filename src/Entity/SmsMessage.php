@@ -488,7 +488,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     $fields['result'] = BaseFieldDefinition::create('entity_reference')
       ->setLabel(t('Message result'))
       ->setDescription(t('The result associated with this SMS message.'))
-      ->setTargetEntityTypeId('sms_result')
+      ->setSetting('target_type', 'sms_result')
       ->setRequired(FALSE);
 
     return $fields;
