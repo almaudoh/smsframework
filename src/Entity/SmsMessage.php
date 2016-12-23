@@ -145,13 +145,6 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
   }
 
   /**
-   * @return \Drupal\sms\Entity\SmsMessageResultInterface
-   */
-  public function getResultEntity() {
-    return $this->get('result')->entity;
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getSender() {
