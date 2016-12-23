@@ -9,7 +9,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\sms\Message\SmsMessageInterface as StdSmsMessageInterface;
-use Drupal\sms\Message\SmsMessageResultInterface;
+use Drupal\sms\Message\SmsMessageResultInterface as StdMessageResultInterface;
 
 /**
  * Defines the SMS message entity.
@@ -32,13 +32,6 @@ use Drupal\sms\Message\SmsMessageResultInterface;
  * )
  */
 class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
-
-  /**
-   * The result associated with this SMS message.
-   *
-   * @var \Drupal\sms\Message\SmsMessageResultInterface|NULL
-   */
-  protected $result;
 
   /**
    * Following are implementors of plain SmsMessage interface.
@@ -140,15 +133,22 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function getResult() {
-    return $this->result;
+    return $this->get('result')->entity;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setResult(SmsMessageResultInterface $result = NULL) {
-    $this->result = $result;
+  public function setResult(StdMessageResultInterface $result = NULL) {
+    $this->set('result', SmsMessageResult::convertFromMessageResult($result));
     return $this;
+  }
+
+  /**
+   * @return \Drupal\sms\Entity\SmsMessageResultInterface
+   */
+  public function getResultEntity() {
+    return $this->get('result')->entity;
   }
 
   /**
@@ -490,6 +490,13 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
       ->setDescription(t('The SMS message.'))
       ->setDefaultValue('')
       ->setRequired(TRUE);
+
+    // Message result entity.
+    $fields['result'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Message result'))
+      ->setDescription(t('The result associated with this SMS message.'))
+      ->setTargetEntityTypeId('sms_result')
+      ->setRequired(FALSE);
 
     return $fields;
   }

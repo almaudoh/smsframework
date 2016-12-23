@@ -4,6 +4,7 @@ namespace Drupal\Tests\sms\Unit\Message;
 
 use Drupal\Component\Uuid\Php;
 use Drupal\sms\Message\SmsMessage;
+use Drupal\sms\Message\SmsMessageResult;
 use Drupal\Tests\UnitTestCase;
 use Drupal\sms\Tests\SmsFrameworkMessageTestTrait;
 
@@ -25,6 +26,10 @@ class SmsMessageTest extends UnitTestCase {
    */
   protected function createSmsMessage() {
     return new TestSmsMessage();
+  }
+
+  protected function createSmsMessageResult() {
+    return new SmsMessageResult();
   }
 
 }

@@ -4,6 +4,7 @@ namespace Drupal\Tests\sms\Kernel;
 
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\entity_test\Entity\EntityTest;
+use Drupal\sms\Entity\SmsMessageResult;
 use Drupal\sms\Message\SmsMessage as StandardSmsMessage;
 use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Tests\SmsFrameworkMessageTestTrait;
@@ -54,6 +55,10 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
    */
   protected function createSmsMessage(array $values = []) {
     return SmsMessage::create($values);
+  }
+
+  protected function createSmsMessageResult() {
+    return SmsMessageResult::create();
   }
 
   /**
