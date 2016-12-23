@@ -28,6 +28,9 @@ class SmsMessageTest extends UnitTestCase {
     return new TestSmsMessage();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function createSmsMessageResult() {
     return new SmsMessageResult();
   }

@@ -57,6 +57,9 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
     return SmsMessage::create($values);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function createSmsMessageResult() {
     return SmsMessageResult::create();
   }

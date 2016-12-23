@@ -198,7 +198,7 @@ trait SmsFrameworkMessageTestTrait {
     $sms_message->setResult($result);
 
     $result_actual = $sms_message->getResult();
-//    $this->assertSame($result, $result_actual);
+    $this->assertSame($result, $result_actual);
     $this->assertSame($error_message, $result_actual->getErrorMessage());
   }
 
