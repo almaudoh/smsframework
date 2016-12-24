@@ -172,7 +172,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
       ->setRequired(TRUE);
 
     $fields['reports'] = BaseFieldDefinition::create('entity_reference')
-      ->setTargetEntityTypeId('sms_delivery_report')
+      ->setSetting('target_type', 'sms_report')
       ->setLabel(t('Message reports'))
       ->setDescription(t('The reports from each individual message'))
       ->setReadOnly(TRUE)
