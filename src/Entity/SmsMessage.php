@@ -140,7 +140,12 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function setResult(StdMessageResultInterface $result = NULL) {
-    $this->set('result', SmsMessageResult::convertFromMessageResult($result));
+    if ($result === NULL) {
+      $this->set('result', NULL);
+    }
+    else {
+      $this->set('result', SmsMessageResult::convertFromMessageResult($result));
+    }
     return $this;
   }
 
@@ -515,7 +520,8 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
       ->setSender($sms_message->getSender())
       ->setSenderNumber($sms_message->getSenderNumber())
       ->addRecipients($sms_message->getRecipients())
-      ->setMessage($sms_message->getMessage());
+      ->setMessage($sms_message->getMessage())
+      ->setResult($sms_message->getResult());
 
     if ($gateway = $sms_message->getGateway()) {
       $new->setGateway($gateway);
