@@ -137,7 +137,7 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
 
     $fields['status'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Delivery status'))
-      ->setDescription(t('The status of the message. One of queued, delivered, expired, rejected, invalid_recipient or content_invalid'))
+      ->setDescription(t('The status of the message. One of queued, delivered, expired, rejected, invalid_recipient or content_invalid.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 

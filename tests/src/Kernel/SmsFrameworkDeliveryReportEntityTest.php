@@ -4,6 +4,7 @@ namespace Drupal\Tests\sms\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\sms\Entity\SmsDeliveryReport;
+use Drupal\sms\Message\SmsMessageReportStatus;
 use Drupal\sms\Tests\SmsFrameworkDeliveryReportTestTrait;
 use Drupal\sms\Tests\SmsFrameworkTestTrait;
 
@@ -34,6 +35,33 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
    */
   protected function createDeliveryReport() {
     return SmsDeliveryReport::create();
+  }
+
+  public function testSaveAndRetrieveReport() {
+    /** @var \Drupal\sms\Entity\SmsDeliveryReport $report */
+    $report = $this->createDeliveryReport()
+      ->setMessageId($this->randomMachineName())
+      ->setStatus(SmsMessageReportStatus::DELIVERED)
+      ->setRecipient('1234567890')
+      ->setStatusMessage('Message delivered')
+      ->setTimeQueued(REQUEST_TIME)
+      ->setTimeDelivered(REQUEST_TIME + 3600);
+    $report->save();
+
+    $storage = $this->container->get('entity_type.manager')->getStorage('sms_report');
+    $saved = $storage->loadByProperties([
+      'recipient' => '1234567890',
+    ]);
+    $this->assertEquals(1, count($saved));
+    $saved = reset($saved);
+    $this->assertEquals($report->getRecipient(), $saved->getRecipient());
+    $this->assertEquals($report->getMessageId(), $saved->getMessageId());
+    $this->assertEquals($report->getStatus(), $saved->getStatus());
+    $this->assertEquals($report->getStatusMessage(), $saved->getStatusMessage());
+    $this->assertEquals($report->getTimeQueued(), $saved->getTimeQueued());
+    $this->assertEquals($report->getTimeDelivered(), $saved->getTimeDelivered());
+    $this->assertEquals($report->getTimeDelivered(), $saved->getTimeDelivered());
+    $this->assertEquals($report->uuid(), $saved->uuid());
   }
 
 }
