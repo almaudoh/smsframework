@@ -246,6 +246,7 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
     $user = User::create(['uid' => 1, 'name' => 'user']);
     $user->save();
 
+    $gateway = $this->createMemoryGateway();
     $sender_number = $this->randomPhoneNumbers(1);
     $original = new StandardSmsMessage('', [], '', [], NULL);
     $original
@@ -254,6 +255,7 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
       ->addRecipients(['123123123', '456456456'])
       ->setMessage($this->randomMachineName())
       ->setUid($user->id())
+      ->setGateway($gateway)
       ->setOption('foo', $this->randomMachineName())
       ->setOption('bar', $this->randomMachineName())
       ->setResult($this->createMessageResult($original));
@@ -267,6 +269,7 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
     $this->assertEquals($user->id(), $sms_message->getSenderEntity()->id());
     $this->assertEquals($original->getOption('foo'), $sms_message->getOption('foo'));
     $this->assertEquals($original->getOption('bar'), $sms_message->getOption('bar'));
+    $this->assertEquals($original->getGateway(), $sms_message->getGateway());
     $this->assertEquals(count($original->getResult()->getReports()), count($sms_message->getResult()->getReports()));
     $this->assertEquals($original->getResult()->getReport('123123123')->getRecipient(),
       $sms_message->getResult()->getReport('123123123')->getRecipient());
