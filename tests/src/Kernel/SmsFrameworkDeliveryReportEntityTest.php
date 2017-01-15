@@ -37,6 +37,9 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
     return SmsDeliveryReport::create();
   }
 
+  /**
+   * Tests saving and retrieval of a complete entity.
+   */
   public function testSaveAndRetrieveReport() {
     /** @var \Drupal\sms\Entity\SmsDeliveryReport $report */
     $report = $this->createDeliveryReport()
