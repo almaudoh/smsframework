@@ -5,9 +5,12 @@ namespace Drupal\Tests\sms\Kernel;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\sms\Direction;
+use Drupal\sms\Entity\SmsDeliveryReport;
+use Drupal\sms\Entity\SmsMessageInterface;
 use Drupal\sms\Entity\SmsMessageResult;
 use Drupal\sms\Message\SmsMessage as StandardSmsMessage;
 use Drupal\sms\Entity\SmsMessage;
+use Drupal\sms\Message\SmsMessageResultInterface;
 use Drupal\sms\Tests\SmsFrameworkMessageTestTrait;
 use Drupal\sms\Tests\SmsFrameworkTestTrait;
 use Drupal\user\Entity\User;
@@ -317,6 +320,46 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
     $this->assertEquals($sms_message->getResult(), $saved->getResult());
     $this->assertEquals($sms_message->getResult()->getReports(), $saved->getResult()->getReports());
     $this->assertEquals(2, count($sms_message->getResult()->getReports()));
+  }
+
+  /**
+   * Tests that getResult returns null if no result is set.
+   *
+   * @covers ::getResult
+   */
+  public function testGetResultNoResult() {
+    $sms_message = SmsMessage::create();
+    $this->assertNull($sms_message->getResult());
+  }
+
+  /**
+   * Tests cascade delete on the SMS message, result and reports.
+   */
+  public function testCascadeDelete() {
+    $sms_message = (SmsMessage::create())
+      ->setMessage($this->getRandomGenerator()->paragraphs())
+      ->setGateway($this->createMemoryGateway())
+      ->addRecipients($this->randomPhoneNumbers())
+      ->setSender($this->randomMachineName());
+
+    $this->assertNull($sms_message->getResult());
+    $sms_result = $this->createMessageResult($sms_message);
+    $sms_message
+      ->setResult($sms_result)
+      ->save();
+    $sms_reports = $sms_result->getReports();
+
+    $this->assertInstanceOf(SmsMessageResultInterface::class, $sms_message->getResult());
+    $this->assertInstanceOf(SmsMessageInterface::class, SmsMessage::load($sms_message->id()));
+    $this->assertInstanceOf(SmsMessageResultInterface::class, SmsMessageResult::load($sms_result->id()));
+    $this->assertEquals(count($sms_reports), count(SmsDeliveryReport::loadMultiple()));
+
+    // Delete the message and confirm that all has been removed.
+    $sms_message->delete();
+
+    $this->assertNull(SmsMessage::load($sms_message->id()));
+    $this->assertNull(SmsMessageResult::load($sms_result->id()));
+    $this->assertEquals([], SmsDeliveryReport::loadMultiple());
   }
 
 }

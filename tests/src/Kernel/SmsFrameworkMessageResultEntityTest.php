@@ -36,6 +36,9 @@ class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
     return SmsMessageResult::create();
   }
 
+  /**
+   * Tests saving and retrieval of complete entity.
+   */
   public function testSaveAndRetrieveResult() {
     /** @var \Drupal\sms\Entity\SmsMessageResult $result */
     $result = $this->createMessageResult()
@@ -55,6 +58,16 @@ class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
     $this->assertEquals($result->getErrorMessage(), $saved->getErrorMessage());
     $this->assertEquals($result->getReports(), $saved->getReports());
     $this->assertEquals($result->uuid(), $saved->uuid());
+  }
+
+  /**
+   * Tests that getReports returns an empty array if no reports are set.
+   *
+   * @covers ::getReports
+   */
+  public function testGetReportsNoReport() {
+    $result = SmsMessageResult::create();
+    $this->assertEquals([], $result->getReports());
   }
 
 }
