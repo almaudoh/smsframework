@@ -19,7 +19,7 @@ class SmsMessage implements SmsMessageInterface {
   /**
    * The sender's name.
    *
-   * @var string
+   * @var string|NULL
    */
   protected $senderName;
 

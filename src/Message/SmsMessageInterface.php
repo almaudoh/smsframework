@@ -174,7 +174,7 @@ interface SmsMessageInterface {
   /**
    * Set the name of the sender of this SMS message.
    *
-   * @param string $sender
+   * @param string|NULL $sender
    *   The name of the sender.
    *
    * @return $this
