@@ -3,6 +3,7 @@
 namespace Drupal\sms\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Exception\SmsException;
@@ -205,6 +206,19 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
       ->setReports($sms_result->getReports());
 
     return $new;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+    foreach ($entities as $sms_result) {
+      foreach ($sms_result->getReports() as $report) {
+        $report->delete();
+      }
+      $sms_result->setReports([]);
+    }
   }
 
 }

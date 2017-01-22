@@ -336,6 +336,8 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
    * Tests cascade delete on the SMS message, result and reports.
    */
   public function testCascadeDelete() {
+    $this->installEntitySchema('sms_result');
+    $this->installEntitySchema('sms_report');
     $sms_message = (SmsMessage::create())
       ->setMessage($this->getRandomGenerator()->paragraphs())
       ->setGateway($this->createMemoryGateway())
@@ -343,7 +345,7 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
       ->setSender($this->randomMachineName());
 
     $this->assertNull($sms_message->getResult());
-    $sms_result = $this->createMessageResult($sms_message);
+    $sms_result = SmsMessageResult::convertFromMessageResult($this->createMessageResult($sms_message));
     $sms_message
       ->setResult($sms_result)
       ->save();
