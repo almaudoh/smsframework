@@ -191,7 +191,7 @@ trait SmsFrameworkMessageTestTrait {
    */
   public function testResults() {
     $error_message = $this->getRandomGenerator()->string();
-    $result = (new SmsMessageResult())
+    $result = $this->createSmsMessageResult()
       ->setErrorMessage($error_message);
 
     $sms_message = $this->createSmsMessage();
@@ -264,5 +264,10 @@ trait SmsFrameworkMessageTestTrait {
     $this->assertEquals(['300', '400'], $sms_messages[1]->getRecipients());
     $this->assertEquals(['500'], $sms_messages[2]->getRecipients());
   }
+
+  /**
+   * @return \Drupal\sms\Message\SmsMessageResultInterface
+   */
+  abstract protected function createSmsMessageResult();
 
 }

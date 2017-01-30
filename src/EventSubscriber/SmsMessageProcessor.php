@@ -2,6 +2,9 @@
 
 namespace Drupal\sms\EventSubscriber;
 
+use Drupal\sms\Entity\SmsDeliveryReport;
+use Drupal\sms\Event\SmsDeliveryReportEvent;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
@@ -42,6 +45,8 @@ class SmsMessageProcessor implements EventSubscriberInterface {
    */
   protected $configFactory;
 
+  protected $entityTypeManager;
+
   /**
    * Creates a new SmsMessageProcessor controller.
    *
@@ -49,10 +54,13 @@ class SmsMessageProcessor implements EventSubscriberInterface {
    *   The event dispatcher.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher, ConfigFactoryInterface $config_factory) {
+  public function __construct(EventDispatcherInterface $event_dispatcher, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager) {
     $this->eventDispatcher = $event_dispatcher;
     $this->configFactory = $config_factory;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -283,6 +291,35 @@ class SmsMessageProcessor implements EventSubscriberInterface {
   }
 
   /**
+   * Updates the delivery status on stored SMS delivery reports.
+   *
+   * @param \Drupal\sms\Event\SmsDeliveryReportEvent $event
+   *   The event containing updated delivery reports status.
+   */
+  public function updateDeliveryReports(SmsDeliveryReportEvent $event) {
+    $storage = $this->entityTypeManager->getStorage('sms_report');
+    foreach ($event->getReports() as $report) {
+      // Only messages that have message IDs can be tracked and updated.
+      if ($report->getMessageId()) {
+        $existing = $storage->loadByProperties(['message_id' => $report->getMessageId()]);
+        if ($existing) {
+          $existing = reset($existing);
+          $existing
+            ->setStatus($report->getStatus())
+            ->setStatusMessage($report->getStatusMessage())
+            ->setTimeQueued($report->getTimeQueued())
+            ->setTimeDelivered($report->getTimeDelivered())
+            ->save();
+        }
+        else {
+          SmsDeliveryReport::convertFromDeliveryReport($report)
+            ->save();
+        }
+      }
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
@@ -295,6 +332,8 @@ class SmsMessageProcessor implements EventSubscriberInterface {
     $events[SmsEvents::MESSAGE_PRE_PROCESS][] = ['chunkMaxRecipients', -1024];
     // Ensure reports for outgoing messages.
     $events[SmsEvents::MESSAGE_OUTGOING_POST_PROCESS][] = ['ensureReportsPostprocess', 1024];
+    // Update delivery reports as they are received.
+    $events[SmsEvents::DELIVERY_REPORT_POST_PROCESS][] = ['updateDeliveryReports', 1024];
     return $events;
   }
 
