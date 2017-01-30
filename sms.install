@@ -63,7 +63,7 @@ function sms_requirements($phase) {
  * Add the "result" field to SmsMessage entity schema and install the
  * "sms_result" and "sms_report" entity types.
  */
-function sms_update_8200() {
+function sms_update_8101() {
   $update_manager = \Drupal::entityDefinitionUpdateManager();
   $entity_type_manager = \Drupal::entityTypeManager();
 
