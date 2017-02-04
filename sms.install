@@ -5,6 +5,7 @@
  * Install, update and uninstall functions for SMS Framework.
  */
 
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Direction;
 
 /**
@@ -56,4 +57,32 @@ function sms_requirements($phase) {
   }
 
   return $requirements;
+}
+
+/**
+ * Add the "result" field to SmsMessage entity schema and install the
+ * "sms_result" and "sms_report" entity types.
+ */
+function sms_update_8101() {
+  $update_manager = \Drupal::entityDefinitionUpdateManager();
+  $entity_type_manager = \Drupal::entityTypeManager();
+
+  if ($update_manager->getEntityType('sms')) {
+    // Add storage definitions for the sms_result and sms_report entities.
+    if (!$update_manager->getEntityType('sms_result')) {
+      $update_manager->installEntityType($entity_type_manager->getDefinition('sms_result'));
+    }
+    if (!$update_manager->getEntityType('sms_report')) {
+      $update_manager->installEntityType($entity_type_manager->getDefinition('sms_report'));
+    }
+    // Create new storage definition for the new 'result' field in SmsMessage
+    // entity.
+    $storage_definition = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Message result'))
+      ->setDescription(t('The result associated with this SMS message.'))
+      ->setSetting('target_type', 'sms_result')
+      ->setRequired(FALSE);
+
+    $update_manager->installFieldStorageDefinition('result', 'sms', 'sms', $storage_definition);
+  }
 }

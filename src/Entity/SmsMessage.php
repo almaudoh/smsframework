@@ -3,13 +3,14 @@
 namespace Drupal\sms\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\sms\Message\SmsMessageInterface as StdSmsMessageInterface;
-use Drupal\sms\Message\SmsMessageResultInterface;
+use Drupal\sms\Message\SmsMessageResultInterface as StdMessageResultInterface;
 
 /**
  * Defines the SMS message entity.
@@ -32,13 +33,6 @@ use Drupal\sms\Message\SmsMessageResultInterface;
  * )
  */
 class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
-
-  /**
-   * The result associated with this SMS message.
-   *
-   * @var \Drupal\sms\Message\SmsMessageResultInterface|NULL
-   */
-  protected $result;
 
   /**
    * Following are implementors of plain SmsMessage interface.
@@ -140,14 +134,19 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function getResult() {
-    return $this->result;
+    return $this->get('result')->entity;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setResult(SmsMessageResultInterface $result = NULL) {
-    $this->result = $result;
+  public function setResult(StdMessageResultInterface $result = NULL) {
+    if ($result === NULL) {
+      $this->set('result', NULL);
+    }
+    else {
+      $this->set('result', SmsMessageResult::convertFromMessageResult($result));
+    }
     return $this;
   }
 
@@ -491,6 +490,13 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
       ->setDefaultValue('')
       ->setRequired(TRUE);
 
+    // Message result entity.
+    $fields['result'] = BaseFieldDefinition::create('entity_reference')
+      ->setLabel(t('Message result'))
+      ->setDescription(t('The result associated with this SMS message.'))
+      ->setSetting('target_type', 'sms_result')
+      ->setRequired(FALSE);
+
     return $fields;
   }
 
@@ -515,7 +521,8 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
       ->setSender($sms_message->getSender())
       ->setSenderNumber($sms_message->getSenderNumber())
       ->addRecipients($sms_message->getRecipients())
-      ->setMessage($sms_message->getMessage());
+      ->setMessage($sms_message->getMessage())
+      ->setResult($sms_message->getResult());
 
     if ($gateway = $sms_message->getGateway()) {
       $new->setGateway($gateway);
@@ -530,6 +537,16 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     }
 
     return $new;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function postDelete(EntityStorageInterface $storage, array $entities) {
+    parent::postDelete($storage, $entities);
+    foreach ($entities as $sms_message) {
+      $sms_message->getResult() && $sms_message->getResult()->delete();
+    }
   }
 
 }
