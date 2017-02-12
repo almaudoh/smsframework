@@ -36,7 +36,7 @@ class SmsFrameworkUpdateTest extends UpdatePathTestBase {
    */
   public function testSmsUpdate8101() {
     $db_schema = \Drupal::database()->schema();
-    // Check that the sms tables exist but the others don't
+    // Check that the sms tables exist but the others don't.
     $this->assertTrue($db_schema->tableExists('sms'));
     $this->assertTrue($db_schema->tableExists('sms__recipient_phone_number'));
     $this->assertTrue($db_schema->tableExists('sms_phone_number_verification'));
@@ -47,7 +47,7 @@ class SmsFrameworkUpdateTest extends UpdatePathTestBase {
 
     $this->runUpdates();
 
-    // Check that the sms tables exist but the others don't
+    // Check that all the sms entity tables exist.
     $this->assertTrue($db_schema->tableExists('sms'));
     $this->assertTrue($db_schema->tableExists('sms__recipient_phone_number'));
     $this->assertTrue($db_schema->tableExists('sms_phone_number_verification'));
