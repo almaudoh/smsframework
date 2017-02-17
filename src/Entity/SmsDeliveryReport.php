@@ -119,6 +119,21 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
   /**
    * {@inheritdoc}
    */
+  public function getParent() {
+    return $this->get('parent')->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setParent(SmsMessageInterface $parent) {
+    $this->set('parent', $parent);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
@@ -157,6 +172,13 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
     $fields['time_delivered'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Time delivered'))
       ->setDescription(t('The time the message was delivered.'))
+      ->setReadOnly(TRUE)
+      ->setRequired(TRUE);
+
+    $fields['parent'] = BaseFieldDefinition::create('entity_reference')
+      ->setSetting('target_type', 'sms')
+      ->setLabel(t('Parent'))
+      ->setDescription(t('The parent SMS message.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 

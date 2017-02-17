@@ -11,6 +11,7 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\sms\Message\SmsMessageInterface as StdSmsMessageInterface;
 use Drupal\sms\Message\SmsMessageResultInterface as StdMessageResultInterface;
+use Drupal\sms\Message\SmsDeliveryReportInterface as StdDeliveryReportInterface;
 
 /**
  * Defines the SMS message entity.
@@ -134,7 +135,10 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function getResult() {
-    return $this->get('result')->entity;
+    $results = $this->entityTypeManager()
+      ->getStorage('sms_result')
+      ->loadByProperties(['parent' => $this->id()]);
+    return $results ? reset($results) : NULL;
   }
 
   /**
@@ -142,12 +146,57 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    */
   public function setResult(StdMessageResultInterface $result = NULL) {
     if ($result === NULL) {
-      $this->set('result', NULL);
+      // Find any pre-existing report and remove the parent-child relationship.
+      if ($previous_result = $this->getResult()) {
+        // @todo.
+        $previous_result->setParent(NULL);
+      }
     }
     else {
-      $this->set('result', SmsMessageResult::convertFromMessageResult($result));
+      $result = SmsMessageResult::convertFromMessageResult($result);
+      $result->setParent($this);
     }
     return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getReport($recipient) {
+    $reports = $this->entityTypeManager()
+      ->getStorage('sms_report')
+      ->loadByProperties([
+        'parent' => $this->id(),
+        'recipient' => $recipient,
+      ]);
+    return $reports ? reset($reports) : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getReports() {
+    return $this->entityTypeManager()
+      ->getStorage('sms_report')
+      ->loadByProperties(['parent' => $this->id()]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setReports(array $reports) {
+    // Only delivery report entities can be added.
+    foreach ($reports as $report) {
+      $this->addReport($report);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function addReport(StdDeliveryReportInterface $report) {
+    $report = SmsDeliveryReport::convertFromDeliveryReport($report);
+    $report->setParent($this);
   }
 
   /**
@@ -490,13 +539,6 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
       ->setDefaultValue('')
       ->setRequired(TRUE);
 
-    // Message result entity.
-    $fields['result'] = BaseFieldDefinition::create('entity_reference')
-      ->setLabel(t('Message result'))
-      ->setDescription(t('The result associated with this SMS message.'))
-      ->setSetting('target_type', 'sms_result')
-      ->setRequired(FALSE);
-
     return $fields;
   }
 
@@ -522,7 +564,8 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
       ->setSenderNumber($sms_message->getSenderNumber())
       ->addRecipients($sms_message->getRecipients())
       ->setMessage($sms_message->getMessage())
-      ->setResult($sms_message->getResult());
+      ->setResult($sms_message->getResult())
+      ->setReports($sms_message->getReports());
 
     if ($gateway = $sms_message->getGateway()) {
       $new->setGateway($gateway);
@@ -546,6 +589,9 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     parent::postDelete($storage, $entities);
     foreach ($entities as $sms_message) {
       $sms_message->getResult() && $sms_message->getResult()->delete();
+      foreach ($sms_message->getReports() as $report) {
+        $report->delete();
+      }
     }
   }
 

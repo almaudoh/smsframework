@@ -279,4 +279,48 @@ interface SmsMessageInterface {
    */
   public function chunkByRecipients($size);
 
+  /**
+   * Gets the delivery report for a particular recipient.
+   *
+   * @param string $recipient
+   *   The number of the recipient for which the report is to be retrieved.
+   *
+   * @return \Drupal\sms\Message\SmsDeliveryReportInterface|NULL
+   *   A delivery report object, or NULL if there is no report for the
+   *   recipient.
+   *
+   * @see SmsMessageInterface::getReports()
+   */
+  public function getReport($recipient);
+
+  /**
+   * Gets the delivery reports for all recipients.
+   *
+   * @return \Drupal\sms\Message\SmsDeliveryReportInterface[]
+   *   An array of delivery reports.
+   */
+  public function getReports();
+
+  /**
+   * Sets the delivery reports for all recipients.
+   *
+   * @param \Drupal\sms\Message\SmsDeliveryReportInterface[] $reports
+   *   An array of delivery reports.
+   *
+   * @return $this
+   *   Returns this result object for chaining.
+   */
+  public function setReports(array $reports);
+
+  /**
+   * Adds a delivery report to the result.
+   *
+   * @param \Drupal\sms\Message\SmsDeliveryReportInterface $report
+   *   A delivery report.
+   *
+   * @return $this
+   *   Returns this result object for chaining.
+   */
+  public function addReport(SmsDeliveryReportInterface $report);
+
 }

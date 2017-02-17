@@ -75,22 +75,14 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function getReports() {
-    $reports = [];
-    foreach ($this->get('reports') as $report) {
-      $reports[] = $report->entity;
-    }
-    return $reports;
+    return $this->getParent()->getReports();
   }
 
   /**
    * {@inheritdoc}
    */
   public function setReports(array $reports) {
-    $this->reports->filter(function ($item) { return false; });
-    foreach ($reports as $report) {
-      $this->addReport($report);
-    }
-    return $this;
+    return $this->getParent()->setReports($reports);
   }
 
   /**
@@ -144,6 +136,21 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
   /**
    * {@inheritdoc}
    */
+  public function getParent() {
+    return $this->get('parent')->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setParent(SmsMessageInterface $parent) {
+    $this->set('parent', $parent);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
     $fields = parent::baseFieldDefinitions($entity_type);
 
@@ -172,12 +179,11 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 
-    $fields['reports'] = BaseFieldDefinition::create('entity_reference')
-      ->setSetting('target_type', 'sms_report')
-      ->setLabel(t('Message reports'))
-      ->setDescription(t('The reports from each individual message.'))
+    $fields['parent'] = BaseFieldDefinition::create('entity_reference')
+      ->setSetting('target_type', 'sms')
+      ->setLabel(t('Parent'))
+      ->setDescription(t('The parent SMS message.'))
       ->setReadOnly(TRUE)
-      ->setCardinality(BaseFieldDefinition::CARDINALITY_UNLIMITED)
       ->setRequired(TRUE);
 
     return $fields;
@@ -206,19 +212,6 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
       ->setReports($sms_result->getReports());
 
     return $new;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function postDelete(EntityStorageInterface $storage, array $entities) {
-    parent::postDelete($storage, $entities);
-    foreach ($entities as $sms_result) {
-      foreach ($sms_result->getReports() as $report) {
-        $report->delete();
-      }
-      $sms_result->setReports([]);
-    }
   }
 
 }
