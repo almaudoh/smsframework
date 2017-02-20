@@ -4,6 +4,7 @@ namespace Drupal\Tests\sms\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\sms\Entity\SmsDeliveryReport;
+use Drupal\sms\Entity\SmsDeliveryReportInterface;
 use Drupal\sms\Message\SmsMessageReportStatus;
 use Drupal\sms\Tests\SmsFrameworkDeliveryReportTestTrait;
 use Drupal\sms\Tests\SmsFrameworkTestTrait;
@@ -17,7 +18,11 @@ use Drupal\sms\Tests\SmsFrameworkTestTrait;
 class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
 
   use SmsFrameworkTestTrait;
-  use SmsFrameworkDeliveryReportTestTrait;
+  use SmsFrameworkDeliveryReportTestTrait {
+    // Remove 'test' prefix so it will not be run by test runner and override.
+    testTimeQueued as timeQueued;
+    testTimeDelivered as timeDelivered;
+  }
 
   public static $modules = ['user', 'sms', 'sms_test_gateway', 'telephone', 'dynamic_entity_reference', 'entity_test'];
 
@@ -35,6 +40,42 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
    */
   protected function createDeliveryReport() {
     return SmsDeliveryReport::create();
+  }
+
+  public function testTimeQueued() {
+    $report = $this->createDeliveryReport();
+    $this->assertNull($report->getTimeQueued(), 'Default value is NULL');
+
+    // Save a version that has QUEUED as the status.
+    $time = 123123123;
+    $report
+      ->setStatus(SmsMessageReportStatus::QUEUED)
+      ->setStatusTime($time)
+      ->save();
+
+    $return = $report
+      ->setTimeQueued($time);
+
+    $this->assertTrue($return instanceof SmsDeliveryReportInterface);
+    $this->assertEquals($time, $report->getTimeQueued());
+  }
+
+  public function testTimeDelivered() {
+    $report = $this->createDeliveryReport();
+    $this->assertNull($report->getTimeQueued(), 'Default value is NULL');
+
+    // Save a version that has QUEUED as the status.
+    $time = 123123123;
+    $report
+      ->setStatus(SmsMessageReportStatus::DELIVERED)
+      ->setStatusTime($time)
+      ->save();
+
+    $return = $report
+      ->setTimeDelivered($time);
+
+    $this->assertTrue($return instanceof SmsDeliveryReportInterface);
+    $this->assertEquals($time, $report->getTimeDelivered());
   }
 
   /**
@@ -65,6 +106,14 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
     $this->assertEquals($report->getTimeDelivered(), $saved->getTimeDelivered());
     $this->assertEquals($report->getTimeDelivered(), $saved->getTimeDelivered());
     $this->assertEquals($report->uuid(), $saved->uuid());
+  }
+
+  public function testSaveReportWithoutParent() {
+
+  }
+
+  public function testReportRevisions() {
+
   }
 
 }

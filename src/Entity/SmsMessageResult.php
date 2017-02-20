@@ -3,7 +3,6 @@
 namespace Drupal\sms\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Exception\SmsException;
@@ -75,21 +74,23 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function getReports() {
-    return $this->getParent()->getReports();
+    $parent = $this->getParent();
+    return $parent ? $parent->getReports() : [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function setReports(array $reports) {
-    return $this->getParent()->setReports($reports);
+    $this->getParent() && $this->getParent()->setReports($reports);
+    return $this;
   }
 
   /**
    * {@inheritdoc}
    */
   public function addReport(PlainDeliveryReportInterface $report) {
-    $this->reports->appendItem(SmsDeliveryReport::convertFromDeliveryReport($report));
+    $this->getParent() && $this->getParent()->addReport($report);
     return $this;
   }
 
