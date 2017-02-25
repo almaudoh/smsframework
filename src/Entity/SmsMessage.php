@@ -36,6 +36,13 @@ use Drupal\sms\Message\SmsDeliveryReportInterface as StdDeliveryReportInterface;
 class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
 
   /**
+   * Other entities to be saved when this SMS message is saved.
+   *
+   * @var \Drupal\Core\Entity\EntityInterface[]
+   */
+  protected $entitiesForSave = [];
+
+  /**
    * Following are implementors of plain SmsMessage interface.
    *
    * @see \Drupal\sms\Entity\SmsMessageInterface
@@ -137,24 +144,24 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
   public function getResult() {
     $results = $this->entityTypeManager()
       ->getStorage('sms_result')
-      ->loadByProperties(['parent' => $this->id()]);
+      ->loadByProperties(['sms_message' => $this->id()]);
     return $results ? reset($results) : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setResult(StdMessageResultInterface $result = NULL) {
-    if ($result === NULL) {
-      // Find any pre-existing report and remove the parent-child relationship.
-      if ($previous_result = $this->getResult()) {
-        // @todo.
-        $previous_result->setParent(NULL);
-      }
+  public function setResult(StdMessageResultInterface $result) {
+    // Throw an exception if there is already a result for this SMS message.
+    $previous_result = $this->getResult();
+    if ($previous_result) {
+      throw new \InvalidArgumentException('SMS message result cannot be changed or updated.');
     }
     else {
       $result = SmsMessageResult::convertFromMessageResult($result);
-      $result->setParent($this);
+      $result->setSmsMessage($this);
+      // Flag the new result entity for saving.
+      $this->entitiesForSave[] = $result;
     }
     return $this;
   }
@@ -166,7 +173,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     $reports = $this->entityTypeManager()
       ->getStorage('sms_report')
       ->loadByProperties([
-        'parent' => $this->id(),
+        'sms_message' => $this->id(),
         'recipient' => $recipient,
       ]);
     return $reports ? reset($reports) : NULL;
@@ -178,7 +185,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
   public function getReports() {
     return $this->entityTypeManager()
       ->getStorage('sms_report')
-      ->loadByProperties(['parent' => $this->id()]);
+      ->loadByProperties(['sms_message' => $this->id()]);
   }
 
   /**
@@ -196,7 +203,9 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    */
   public function addReport(StdDeliveryReportInterface $report) {
     $report = SmsDeliveryReport::convertFromDeliveryReport($report);
-    $report->setParent($this);
+    $report->setSmsMessage($this);
+    // Flag the new delivery report entity for saving.
+    $this->entitiesForSave[] = $report;
   }
 
   /**
@@ -587,11 +596,26 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    */
   public static function postDelete(EntityStorageInterface $storage, array $entities) {
     parent::postDelete($storage, $entities);
+    $results = [];
+    $reports = [];
     foreach ($entities as $sms_message) {
-      $sms_message->getResult() && $sms_message->getResult()->delete();
-      foreach ($sms_message->getReports() as $report) {
-        $report->delete();
+      if ($result = $sms_message->getResult()) {
+        $results[] = $result;
       }
+      $reports = array_merge($reports, $sms_message->getReports());
+    }
+    \Drupal::entityTypeManager()->getStorage('sms_result')->delete($results);
+    \Drupal::entityTypeManager()->getStorage('sms_report')->delete($reports);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+    parent::postSave($storage, $update);
+    // Save the entities that were earlier modified and flagged for saving.
+    foreach ($this->entitiesForSave as $entity) {
+      $entity->save();
     }
   }
 

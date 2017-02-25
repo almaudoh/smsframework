@@ -12,9 +12,7 @@ use Drupal\sms\Message\SmsMessageResultInterface as PlainMessageResultInterface;
 /**
  * Defines the SMS message result entity.
  *
- * The SMS message result entity is used to keep track of message results and
- * delivery reports until they have been cleared by the administrator or an
- * automated process.
+ * The SMS message result entity is used to store SMS message results.
  *
  * @ContentEntityType(
  *   id = "sms_result",
@@ -74,7 +72,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function getReports() {
-    $parent = $this->getParent();
+    $parent = $this->getSmsMessage();
     return $parent ? $parent->getReports() : [];
   }
 
@@ -82,7 +80,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function setReports(array $reports) {
-    $this->getParent() && $this->getParent()->setReports($reports);
+    $this->getSmsMessage() && $this->getSmsMessage()->setReports($reports);
     return $this;
   }
 
@@ -90,7 +88,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function addReport(PlainDeliveryReportInterface $report) {
-    $this->getParent() && $this->getParent()->addReport($report);
+    $this->getSmsMessage() && $this->getSmsMessage()->addReport($report);
     return $this;
   }
 
@@ -137,15 +135,15 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
   /**
    * {@inheritdoc}
    */
-  public function getParent() {
-    return $this->get('parent')->entity;
+  public function getSmsMessage() {
+    return $this->get('sms_message')->entity;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setParent(SmsMessageInterface $parent) {
-    $this->set('parent', $parent);
+  public function setSmsMessage(SmsMessageInterface $sms_message) {
+    $this->set('sms_message', $sms_message);
     return $this;
   }
 
@@ -157,7 +155,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
 
     $fields['error'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Error'))
-      ->setDescription(t('The normalized error code, either account_error, flooded, no_credit, invalid_sender, authentication or parameters.'))
+      ->setDescription(t('The normalized error code.'))
       ->setReadOnly(TRUE)
       ->setRequired(FALSE);
 
@@ -180,9 +178,9 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
 
-    $fields['parent'] = BaseFieldDefinition::create('entity_reference')
+    $fields['sms_message'] = BaseFieldDefinition::create('entity_reference')
       ->setSetting('target_type', 'sms')
-      ->setLabel(t('Parent'))
+      ->setLabel(t('SMS Message'))
       ->setDescription(t('The parent SMS message.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);

@@ -12,9 +12,8 @@ use Drupal\sms\Message\SmsMessageReportStatus;
 /**
  * Defines the SMS message delivery report entity.
  *
- * The SMS delivery report entity is used to keep track of delivery reports for
- * each message until they have been cleared by the administrator or an
- * automated process.
+ * The SMS delivery report entity is used to keep track of SMS delivery reports
+ * for each recipient.
  *
  * @ContentEntityType(
  *   id = "sms_report",
@@ -25,7 +24,6 @@ use Drupal\sms\Message\SmsMessageReportStatus;
  *     "id" = "id",
  *     "uuid" = "uuid",
  *     "revision" = "vid",
- *     "langcode" = "langcode",
  *   },
  * )
  */
@@ -103,8 +101,8 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
   /**
    * {@inheritdoc}
    */
-  public function setStatusTime($timestamp) {
-    $this->set('status_time', $timestamp);
+  public function setStatusTime($time) {
+    $this->set('status_time', $time);
     return $this;
   }
 
@@ -120,8 +118,10 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
    * {@inheritdoc}
    */
   public function setTimeQueued($time) {
-    $queued = $this->getRevisionAtStatus(SmsMessageReportStatus::QUEUED);
-    $queued && $queued->setStatusTime($time)->save();
+    $this
+      ->setStatus(SmsMessageReportStatus::QUEUED)
+      ->setStatusTime($time)
+      ->setNewRevision(TRUE);
     return $this;
   }
 
@@ -129,31 +129,33 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
    * {@inheritdoc}
    */
   public function getTimeDelivered() {
-    $queued = $this->getRevisionAtStatus(SmsMessageReportStatus::DELIVERED);
-    return $queued ? $queued->getStatusTime() : NULL;
+    $delivered = $this->getRevisionAtStatus(SmsMessageReportStatus::DELIVERED);
+    return $delivered ? $delivered->getStatusTime() : NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setTimeDelivered($time) {
-    $queued = $this->getRevisionAtStatus(SmsMessageReportStatus::DELIVERED);
-    $queued && $queued->setStatusTime($time)->save();
+    $this
+      ->setStatus(SmsMessageReportStatus::DELIVERED)
+      ->setStatusTime($time)
+      ->setNewRevision(TRUE);
     return $this;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getParent() {
-    return $this->get('parent')->entity;
+  public function getSmsMessage() {
+    return $this->get('sms_message')->entity;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setParent(SmsMessageInterface $parent) {
-    $this->set('parent', $parent);
+  public function setSmsMessage(SmsMessageInterface $sms_message) {
+    $this->set('sms_message', $sms_message);
     return $this;
   }
 
@@ -178,35 +180,35 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
 
     $fields['status'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Delivery status'))
-      ->setDescription(t('The status of the message. One of queued, delivered, expired, rejected, invalid_recipient or content_invalid.'))
+      ->setDescription(t('A status code from \Drupal\sms\Message\SmsMessageReportStatus.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE)
       ->setRevisionable(TRUE);
 
     $fields['status_message'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Status message'))
-      ->setDescription(t('The status message describing the message status.'))
+      ->setDescription(t('The status message as provided by the gateway API.'))
       ->setReadOnly(TRUE)
       ->setDefaultValue('')
       ->setRequired(FALSE)
       ->setRevisionable(TRUE);
 
-    $fields['status_time'] = BaseFieldDefinition::create('string')
+    $fields['status_time'] = BaseFieldDefinition::create('timestamp')
       ->setLabel(t('Status time'))
-      ->setDescription(t('The time specified by the server for the current status.'))
+      ->setDescription(t('The time for the current delivery report status.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE)
       ->setRevisionable(TRUE);
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
-      ->setDescription(t('The time that the delivery report was last changed.'))
+      ->setDescription(t('The time the storage was last updated.'))
       ->setTranslatable(TRUE)
       ->setRevisionable(TRUE);
 
-    $fields['parent'] = BaseFieldDefinition::create('entity_reference')
+    $fields['sms_message'] = BaseFieldDefinition::create('entity_reference')
       ->setSetting('target_type', 'sms')
-      ->setLabel(t('Parent'))
+      ->setLabel(t('SMS Message'))
       ->setDescription(t('The parent SMS message.'))
       ->setReadOnly(TRUE)
       ->setRequired(TRUE);
@@ -240,10 +242,10 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
   }
 
   /**
-   * Gets a revision that has the specified delivery report status.
+   * Gets a revision with the specified delivery report status.
    *
    * @param string $status
-   *   A delivery report status from \Drupal\sms\Message\SmsMessageReportStatus
+   *   Delivery report status from \Drupal\sms\Message\SmsMessageReportStatus
    *
    * @return \Drupal\sms\Entity\SmsDeliveryReportInterface|null
    *   The delivery report object with that status or null if there is none.
@@ -258,11 +260,9 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
       ->range(0, 1)
       ->execute();
     if ($revision_ids) {
-      return $storage->load(array_keys($revision_ids)[0]);
+      return $storage->load(key($revision_ids));
     }
-    else {
-      return NULL;
-    }
+    return NULL;
   }
 
 }

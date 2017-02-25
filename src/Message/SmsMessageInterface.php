@@ -154,14 +154,13 @@ interface SmsMessageInterface {
   /**
    * Set the result associated with this SMS message.
    *
-   * @param \Drupal\sms\Message\SmsMessageResultInterface|NULL $result
-   *   The result to associate with this SMS message, or NULL if there is no
-   *   result.
+   * @param \Drupal\sms\Message\SmsMessageResultInterface $result
+   *   The result to associate with this SMS message.
    *
    * @return $this
    *   The called SMS message object.
    */
-  public function setResult(SmsMessageResultInterface $result = NULL);
+  public function setResult(SmsMessageResultInterface $result);
 
   /**
    * Gets the name of the sender of this SMS message.

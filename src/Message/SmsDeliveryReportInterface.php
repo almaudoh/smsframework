@@ -132,17 +132,19 @@ interface SmsDeliveryReportInterface {
    * Gets the gateway-provided timestamp for the current status.
    *
    * @return int
+   *   A UNIX timestamp.
    */
   public function getStatusTime();
 
   /**
    * Sets the gateway-provided timestamp for the current status.
    *
-   * @param int $timestamp
-   *   The gateway provided timestamp.
+   * @param int $time
+   *   A UNIX timestamp provided by the SMS gateway.
    *
    * @return $this
+   *   Returns this report object for chaining.
    */
-  public function setStatusTime($timestamp);
+  public function setStatusTime($time);
 
 }
