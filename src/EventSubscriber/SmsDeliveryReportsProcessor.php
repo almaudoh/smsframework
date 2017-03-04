@@ -50,10 +50,6 @@ class SmsDeliveryReportsProcessor implements EventSubscriberInterface {
             ->setNewRevision(TRUE)
             ->save();
         }
-        else {
-          SmsDeliveryReport::convertFromDeliveryReport($report)
-            ->save();
-        }
       }
     }
   }

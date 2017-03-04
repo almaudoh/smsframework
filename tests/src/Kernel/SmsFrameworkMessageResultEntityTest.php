@@ -2,8 +2,10 @@
 
 namespace Drupal\Tests\sms\Kernel;
 
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\sms\Entity\SmsDeliveryReport;
+use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Entity\SmsMessageResult;
 use Drupal\sms\Message\SmsMessageResultStatus;
 use Drupal\sms\Tests\SmsFrameworkMessageResultTestTrait;
@@ -46,8 +48,13 @@ class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
       ->setCreditsBalance(rand(10,20))
       ->setError(SmsMessageResultStatus::INVALID_SENDER)
       ->setErrorMessage('Invalid sender ID')
-      ->setReports([(SmsDeliveryReport::create())->setRecipient('1234567890')]);
-    $result->save();
+      ->setReports([SmsDeliveryReport::create()->setRecipient('1234567890')]);
+
+    // Add the result to an SMS entity and save.
+    $sms_message = SmsMessage::create()
+      ->addRecipient('1234567890')
+      ->setResult($result);
+    $sms_message->save();
 
     $storage = $this->container->get('entity_type.manager')->getStorage('sms_result');
     $saved = $storage->load($result->id());
@@ -56,8 +63,23 @@ class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
     $this->assertEquals($result->getCreditsUsed(), $saved->getCreditsUsed());
     $this->assertEquals($result->getError(), $saved->getError());
     $this->assertEquals($result->getErrorMessage(), $saved->getErrorMessage());
-    $this->assertEquals($result->getReports(), $saved->getReports());
+    $this->assertEquals($result->getReports()[0]->getRecipient(), $saved->getReports()[0]->getRecipient());
     $this->assertEquals($result->uuid(), $saved->uuid());
+  }
+
+  /**
+   * Tests saving a message result without a parent SMS message.
+   */
+  public function testSaveResultWithoutParent() {
+    $this->setExpectedException(EntityStorageException::class, 'No parent SMS message specified for SMS message result');
+    /** @var \Drupal\sms\Entity\SmsMessageResult $result */
+    $result = $this->createMessageResult()
+      ->setCreditsUsed(rand(5,10))
+      ->setCreditsBalance(rand(10,20))
+      ->setError(SmsMessageResultStatus::INVALID_SENDER)
+      ->setErrorMessage('Invalid sender ID')
+      ->setReports([(SmsDeliveryReport::create())->setRecipient('1234567890')]);
+    $result->save();
   }
 
   /**

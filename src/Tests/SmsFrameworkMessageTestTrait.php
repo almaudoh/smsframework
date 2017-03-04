@@ -3,6 +3,8 @@
 namespace Drupal\sms\Tests;
 
 use Drupal\sms\Direction;
+use Drupal\sms\Message\SmsDeliveryReport;
+use Drupal\sms\Message\SmsMessageReportStatus;
 use Drupal\sms\Message\SmsMessageResult;
 
 /**
@@ -184,22 +186,38 @@ trait SmsFrameworkMessageTestTrait {
   }
 
   /**
-   * Tests result for SMS messages.
+   * Tests result and reports for SMS messages.
    *
    * @covers ::getResult
    * @covers ::setResult
+   * @covers ::getReport
+   * @covers ::getReports
    */
   public function testResults() {
     $error_message = $this->getRandomGenerator()->string();
-    $result = $this->createSmsMessageResult()
-      ->setErrorMessage($error_message);
+    $recipients = ['2345678901', '1234567890'];
+    $reports = array_combine($recipients, array_map(function ($recipient) {
+        return (new SmsDeliveryReport())
+          ->setRecipient($recipient)
+          ->setStatus(SmsMessageReportStatus::DELIVERED);
+      }, $recipients));
+    $result = (new SmsMessageResult())
+      ->setErrorMessage($error_message)
+      ->setReports($reports);
+    $sms_message = $this->createSmsMessage()
+      ->addRecipients($recipients)
+      ->setResult($result);
 
-    $sms_message = $this->createSmsMessage();
-    $sms_message->setResult($result);
+    // The SmsResult entity needs to be saved first.
+    if ($sms_message instanceof \Drupal\sms\Entity\SmsMessageInterface) {
+      $sms_message->save();
+    }
 
     $result_actual = $sms_message->getResult();
-    $this->assertSame($result, $result_actual);
-    $this->assertSame($error_message, $result_actual->getErrorMessage());
+    $this->assertEquals($error_message, $result_actual->getErrorMessage());
+    $this->assertEquals($result->getErrorMessage(), $result_actual->getErrorMessage());
+    $this->assertEquals($reports['1234567890']->getStatus(), $sms_message->getReport('1234567890')->getStatus());
+    $this->assertEquals($reports['2345678901']->getStatus(), $sms_message->getReport('2345678901')->getStatus());
   }
 
   /**
@@ -264,10 +282,5 @@ trait SmsFrameworkMessageTestTrait {
     $this->assertEquals(['300', '400'], $sms_messages[1]->getRecipients());
     $this->assertEquals(['500'], $sms_messages[2]->getRecipients());
   }
-
-  /**
-   * @return \Drupal\sms\Message\SmsMessageResultInterface
-   */
-  abstract protected function createSmsMessageResult();
 
 }

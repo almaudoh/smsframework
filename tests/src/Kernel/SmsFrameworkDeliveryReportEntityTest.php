@@ -2,9 +2,11 @@
 
 namespace Drupal\Tests\sms\Kernel;
 
+use Drupal\Core\Entity\EntityStorageException;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\sms\Entity\SmsDeliveryReport;
 use Drupal\sms\Entity\SmsDeliveryReportInterface;
+use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Message\SmsMessageReportStatus;
 use Drupal\sms\Tests\SmsFrameworkDeliveryReportTestTrait;
 use Drupal\sms\Tests\SmsFrameworkTestTrait;
@@ -42,13 +44,22 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
     return SmsDeliveryReport::create();
   }
 
+  /**
+   * Tests time queued.
+   *
+   * @covers ::getTimeQueued
+   * @covers ::setTimeQueued
+   */
   public function testTimeQueued() {
     $report = $this->createDeliveryReport();
     $this->assertNull($report->getTimeQueued(), 'Default value is NULL');
 
     // Save a version that has QUEUED as the status.
+    $sms_message = SmsMessage::create();
+    $sms_message->save();
     $time = 123123123;
     $report
+      ->setSmsMessage($sms_message)
       ->setStatus(SmsMessageReportStatus::QUEUED)
       ->setStatusTime($time)
       ->save();
@@ -60,13 +71,22 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
     $this->assertEquals($time, $report->getTimeQueued());
   }
 
+  /**
+   * Tests time delivered.
+   *
+   * @covers ::getTimeDelivered
+   * @covers ::setTimeDelivered
+   */
   public function testTimeDelivered() {
     $report = $this->createDeliveryReport();
     $this->assertNull($report->getTimeQueued(), 'Default value is NULL');
 
-    // Save a version that has QUEUED as the status.
+    // Save a version that has DELIVERED as the status.
+    $sms_message = SmsMessage::create();
+    $sms_message->save();
     $time = 123123123;
     $report
+      ->setSmsMessage($sms_message)
       ->setStatus(SmsMessageReportStatus::DELIVERED)
       ->setStatusTime($time)
       ->save();
@@ -88,9 +108,13 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
       ->setStatus(SmsMessageReportStatus::DELIVERED)
       ->setRecipient('1234567890')
       ->setStatusMessage('Message delivered')
-      ->setTimeQueued(REQUEST_TIME)
-      ->setTimeDelivered(REQUEST_TIME + 3600);
-    $report->save();
+      ->setStatusTime($this->container->get('datetime.time')->getRequestTime());
+
+    $sms_message = SmsMessage::create();
+    $sms_message->save();
+    $report
+      ->setSmsMessage($sms_message)
+      ->save();
 
     $storage = $this->container->get('entity_type.manager')->getStorage('sms_report');
     $saved = $storage->loadByProperties([
@@ -102,18 +126,53 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
     $this->assertEquals($report->getMessageId(), $saved->getMessageId());
     $this->assertEquals($report->getStatus(), $saved->getStatus());
     $this->assertEquals($report->getStatusMessage(), $saved->getStatusMessage());
-    $this->assertEquals($report->getTimeQueued(), $saved->getTimeQueued());
-    $this->assertEquals($report->getTimeDelivered(), $saved->getTimeDelivered());
-    $this->assertEquals($report->getTimeDelivered(), $saved->getTimeDelivered());
+    $this->assertEquals($report->getStatusTime(), $saved->getStatusTime());
     $this->assertEquals($report->uuid(), $saved->uuid());
   }
 
+  /**
+   * Tests saving a message result without a parent SMS message.
+   */
   public function testSaveReportWithoutParent() {
-
+    $this->setExpectedException(EntityStorageException::class, 'No parent SMS message specified for SMS delivery report');
+    /** @var \Drupal\sms\Entity\SmsMessageResult $result */
+    $result = $this->createDeliveryReport()
+      ->setMessageId($this->randomMachineName())
+      ->setStatus(SmsMessageReportStatus::DELIVERED)
+      ->setRecipient('1234567890')
+      ->setStatusMessage('Message delivered')
+      ->setStatusTime($this->container->get('datetime.time')->getRequestTime());
+    $result->save();
   }
 
+  /**
+   * Test saving of delivery report revisions.
+   */
   public function testReportRevisions() {
+    $sms_message = SmsMessage::create();
+    $sms_message->save();
 
+    $time_queued = $this->container->get('datetime.time')->getRequestTime();
+    $time_delivered = $time_queued + 3600;
+
+    /** @var \Drupal\sms\Entity\SmsDeliveryReport $report */
+    $report = $this->createDeliveryReport()
+      ->setSmsMessage($sms_message)
+      ->setMessageId($this->randomMachineName())
+      ->setStatus(SmsMessageReportStatus::DELIVERED)
+      ->setRecipient('1234567890')
+      ->setStatusMessage('Message queued')
+      ->setStatusTime($time_delivered);
+    $report->save();
+
+    $report
+      ->setStatus(SmsMessageReportStatus::DELIVERED)
+      ->setStatusMessage('Message delivered')
+      ->setStatusTime($time_delivered)
+      ->save();
+
+    $this->assertEquals($time_queued, $report->getTimeQueued());
+    $this->assertEquals($time_delivered, $report->getTimeDelivered());
   }
 
 }

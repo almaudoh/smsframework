@@ -4,6 +4,7 @@ namespace Drupal\sms\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Message\SmsDeliveryReportInterface as PlainDeliveryReportInterface;
@@ -217,31 +218,6 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
   }
 
   /**
-   * Converts a plain SMS delivery report into an entity.
-   *
-   * @param \Drupal\sms\Message\SmsDeliveryReportInterface $sms_report
-   *   A plain SMS delivery report.
-   *
-   * @return \Drupal\sms\Entity\SmsDeliveryReportInterface
-   *   An SMS delivery report entity that can be saved.
-   */
-  public static function convertFromDeliveryReport(PlainDeliveryReportInterface $sms_report) {
-    if ($sms_report instanceof static) {
-      return $sms_report;
-    }
-
-    $new = static::create();
-    $new
-      ->setMessageId($sms_report->getMessageId())
-      ->setRecipient($sms_report->getRecipient())
-      ->setStatus($sms_report->getStatus())
-      ->setStatusMessage($sms_report->getStatusMessage())
-      ->setStatusTime($sms_report->getStatusTime());
-
-    return $new;
-  }
-
-  /**
    * Gets a revision with the specified delivery report status.
    *
    * @param string $status
@@ -263,6 +239,17 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
       return $storage->load(key($revision_ids));
     }
     return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function preSave(EntityStorageInterface $storage) {
+    // SMS delivery report cannot be saved without a parent SMS message.
+    if (!$this->getSmsMessage()) {
+      throw new \LogicException('No parent SMS message specified for SMS delivery report');
+    }
+    parent::preSave($storage);
   }
 
 }

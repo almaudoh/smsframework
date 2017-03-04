@@ -3,11 +3,11 @@
 namespace Drupal\sms\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Exception\SmsException;
 use Drupal\sms\Message\SmsDeliveryReportInterface as PlainDeliveryReportInterface;
-use Drupal\sms\Message\SmsMessageResultInterface as PlainMessageResultInterface;
 
 /**
  * Defines the SMS message result entity.
@@ -25,6 +25,13 @@ use Drupal\sms\Message\SmsMessageResultInterface as PlainMessageResultInterface;
  * )
  */
 class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInterface {
+
+  /**
+   * The static cache for delivery reports associated with this SMS result.
+   *
+   * @var \Drupal\sms\Entity\SmsDeliveryReportInterface[]
+   */
+  protected $reports = [];
 
   /**
    * {@inheritdoc}
@@ -60,7 +67,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function getReport($recipient) {
-    foreach ($this->getReports() as $report) {
+    foreach ($this->reports as $report) {
       if ($report->getRecipient() === $recipient) {
         return $report;
       }
@@ -72,15 +79,14 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function getReports() {
-    $parent = $this->getSmsMessage();
-    return $parent ? $parent->getReports() : [];
+    return $this->reports;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setReports(array $reports) {
-    $this->getSmsMessage() && $this->getSmsMessage()->setReports($reports);
+    $this->reports = $reports;
     return $this;
   }
 
@@ -88,7 +94,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function addReport(PlainDeliveryReportInterface $report) {
-    $this->getSmsMessage() && $this->getSmsMessage()->addReport($report);
+    $this->reports[] = $report;
     return $this;
   }
 
@@ -189,28 +195,27 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
   }
 
   /**
-   * Converts a plain SMS message result into an SMS message result entity.
-   *
-   * @param \Drupal\sms\Message\SmsMessageResultInterface $sms_result
-   *   A plain SMS message result.
-   *
-   * @return \Drupal\sms\Entity\SmsMessageResultInterface
-   *   An SMS message result entity that can be saved.
+   * {@inheritdoc}
    */
-  public static function convertFromMessageResult(PlainMessageResultInterface $sms_result) {
-    if ($sms_result instanceof static) {
-      return $sms_result;
+  public function preSave(EntityStorageInterface $storage) {
+    // SMS message result cannot be saved without a parent SMS message.
+    if (!$this->getSmsMessage()) {
+      throw new \LogicException('No parent SMS message specified for SMS message result');
     }
+    parent::preSave($storage);
+  }
 
-    $new = static::create();
-    $new
-      ->setCreditsBalance($sms_result->getCreditsBalance())
-      ->setCreditsUsed($sms_result->getCreditsUsed())
-      ->setError($sms_result->getError())
-      ->setErrorMessage($sms_result->getErrorMessage())
-      ->setReports($sms_result->getReports());
-
-    return $new;
+  /**
+   * {@inheritdoc}
+   */
+  public static function postLoad(EntityStorageInterface $storage, array &$entities) {
+    // This post-load hook is to ensure consistency of behavior of the
+    // ::getReports() method by assigning the actual values from the parent SMS
+    // message entity to the temporary in-memory ::reports variable.
+    /** @var \Drupal\sms\Entity\SmsMessageResultInterface $result */
+    foreach ($entities as $result) {
+      $result->setReports($result->getSmsMessage()->getReports());
+    }
   }
 
 }

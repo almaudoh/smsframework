@@ -36,11 +36,11 @@ use Drupal\sms\Message\SmsDeliveryReportInterface as StdDeliveryReportInterface;
 class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
 
   /**
-   * Other entities to be saved when this SMS message is saved.
+   * Temporarily stores the message result until save().
    *
-   * @var \Drupal\Core\Entity\EntityInterface[]
+   * @var \Drupal\sms\Entity\SmsMessageResultInterface
    */
-  protected $entitiesForSave = [];
+  protected $result = NULL;
 
   /**
    * Following are implementors of plain SmsMessage interface.
@@ -142,26 +142,31 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function getResult() {
+    // Check the temporary store first as that contains the most recent value.
+    // Also, if the entity is new return that value (can be null).
+    if ($this->result || $this->isNew()) {
+      return $this->result;
+    }
     $results = $this->entityTypeManager()
       ->getStorage('sms_result')
       ->loadByProperties(['sms_message' => $this->id()]);
-    return $results ? reset($results) : NULL;
+    $this->result = $results ? reset($results) : NULL;
+    return $this->result;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setResult(StdMessageResultInterface $result) {
+  public function setResult(StdMessageResultInterface $result = NULL) {
     // Throw an exception if there is already a result for this SMS message.
     $previous_result = $this->getResult();
     if ($previous_result) {
       throw new \InvalidArgumentException('SMS message result cannot be changed or updated.');
     }
-    else {
-      $result = SmsMessageResult::convertFromMessageResult($result);
-      $result->setSmsMessage($this);
-      // Flag the new result entity for saving.
-      $this->entitiesForSave[] = $result;
+    else if ($result) {
+      // Temporarily store the result so it can be retrieved without having to
+      // save the message entity.
+      $this->result = $result;
     }
     return $this;
   }
@@ -170,42 +175,36 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function getReport($recipient) {
-    $reports = $this->entityTypeManager()
-      ->getStorage('sms_report')
-      ->loadByProperties([
-        'sms_message' => $this->id(),
-        'recipient' => $recipient,
-      ]);
-    return $reports ? reset($reports) : NULL;
+    // If a result has been set, check that first.
+    if ($this->result && $report = $this->result->getReport($recipient)) {
+      return $report;
+    }
+    else if (!$this->isNew()) {
+      $reports = $this->entityTypeManager()
+        ->getStorage('sms_report')
+        ->loadByProperties([
+          'sms_message' => $this->id(),
+          'recipient' => $recipient,
+        ]);
+      return $reports ? reset($reports) : NULL;
+    }
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getReports() {
-    return $this->entityTypeManager()
-      ->getStorage('sms_report')
-      ->loadByProperties(['sms_message' => $this->id()]);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setReports(array $reports) {
-    // Only delivery report entities can be added.
-    foreach ($reports as $report) {
-      $this->addReport($report);
+    // If a result has been set, check that first.
+    if ($this->result) {
+      return $this->result->getReports();
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addReport(StdDeliveryReportInterface $report) {
-    $report = SmsDeliveryReport::convertFromDeliveryReport($report);
-    $report->setSmsMessage($this);
-    // Flag the new delivery report entity for saving.
-    $this->entitiesForSave[] = $report;
+    else if (!$this->isNew()) {
+      return array_values($this->entityTypeManager()
+        ->getStorage('sms_report')
+        ->loadByProperties(['sms_message' => $this->id()]));
+    }
+    return [];
   }
 
   /**
@@ -573,8 +572,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
       ->setSenderNumber($sms_message->getSenderNumber())
       ->addRecipients($sms_message->getRecipients())
       ->setMessage($sms_message->getMessage())
-      ->setResult($sms_message->getResult())
-      ->setReports($sms_message->getReports());
+      ->setResult($sms_message->getResult());
 
     if ($gateway = $sms_message->getGateway()) {
       $new->setGateway($gateway);
@@ -613,10 +611,66 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-    // Save the entities that were earlier modified and flagged for saving.
-    foreach ($this->entitiesForSave as $entity) {
-      $entity->save();
+    // Save the result and reports in the static cache.
+    if ($this->result) {
+      $result_entity = $this->convertFromMessageResult($this->result);
+      $result_entity
+        ->setSmsMessage($this)
+        ->save();
+
+      foreach ($this->result->getReports() as $report) {
+        $report_entity = $this->convertFromDeliveryReport($report);
+        $report_entity
+          ->setSmsMessage($this)
+          ->save();
+      }
     }
+  }
+
+  /**
+   * Converts a plain SMS message result into an SMS message result entity.
+   *
+   * @param \Drupal\sms\Message\SmsMessageResultInterface $sms_result
+   *   A plain SMS message result.
+   *
+   * @return \Drupal\sms\Entity\SmsMessageResultInterface
+   *   An SMS message result entity that can be saved.
+   */
+  protected function convertFromMessageResult(StdMessageResultInterface $sms_result) {
+    if ($sms_result instanceof SmsMessageResultInterface) {
+      return $sms_result;
+    }
+    $new = SmsMessageResult::create();
+    $new
+      ->setCreditsBalance($sms_result->getCreditsBalance())
+      ->setCreditsUsed($sms_result->getCreditsUsed())
+      ->setError($sms_result->getError())
+      ->setErrorMessage($sms_result->getErrorMessage())
+      ->setReports($sms_result->getReports());
+    return $new;
+  }
+
+  /**
+   * Converts a plain SMS delivery report into an entity.
+   *
+   * @param \Drupal\sms\Message\SmsDeliveryReportInterface $sms_report
+   *   A plain SMS delivery report.
+   *
+   * @return \Drupal\sms\Entity\SmsDeliveryReportInterface
+   *   An SMS delivery report entity that can be saved.
+   */
+  protected function convertFromDeliveryReport(StdDeliveryReportInterface $sms_report) {
+    if ($sms_report instanceof SmsDeliveryReportInterface) {
+      return $sms_report;
+    }
+    $new = SmsDeliveryReport::create();
+    $new
+      ->setMessageId($sms_report->getMessageId())
+      ->setRecipient($sms_report->getRecipient())
+      ->setStatus($sms_report->getStatus())
+      ->setStatusMessage($sms_report->getStatusMessage())
+      ->setStatusTime($sms_report->getStatusTime());
+    return $new;
   }
 
 }

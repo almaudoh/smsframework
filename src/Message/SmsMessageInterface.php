@@ -154,13 +154,14 @@ interface SmsMessageInterface {
   /**
    * Set the result associated with this SMS message.
    *
-   * @param \Drupal\sms\Message\SmsMessageResultInterface $result
-   *   The result to associate with this SMS message.
+   * @param \Drupal\sms\Message\SmsMessageResultInterface|NULL $result
+   *   The result to associate with this SMS message, or NULL if there is no
+   *   result.
    *
    * @return $this
    *   The called SMS message object.
    */
-  public function setResult(SmsMessageResultInterface $result);
+  public function setResult(SmsMessageResultInterface $result = NULL);
 
   /**
    * Gets the name of the sender of this SMS message.
@@ -299,27 +300,5 @@ interface SmsMessageInterface {
    *   An array of delivery reports.
    */
   public function getReports();
-
-  /**
-   * Sets the delivery reports for all recipients.
-   *
-   * @param \Drupal\sms\Message\SmsDeliveryReportInterface[] $reports
-   *   An array of delivery reports.
-   *
-   * @return $this
-   *   Returns this result object for chaining.
-   */
-  public function setReports(array $reports);
-
-  /**
-   * Adds a delivery report to the result.
-   *
-   * @param \Drupal\sms\Message\SmsDeliveryReportInterface $report
-   *   A delivery report.
-   *
-   * @return $this
-   *   Returns this result object for chaining.
-   */
-  public function addReport(SmsDeliveryReportInterface $report);
 
 }

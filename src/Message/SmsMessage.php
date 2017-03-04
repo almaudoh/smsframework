@@ -274,7 +274,7 @@ class SmsMessage implements SmsMessageInterface {
   /**
    * {@inheritdoc}
    */
-  public function setResult(SmsMessageResultInterface $result) {
+  public function setResult(SmsMessageResultInterface $result = NULL) {
     $this->result = $result;
     return $this;
   }
@@ -360,22 +360,6 @@ class SmsMessage implements SmsMessageInterface {
    */
   public function getReports() {
     return $this->result ? $this->result->getReports() : [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setReports(array $reports) {
-    $this->result && $this->result->setReports($reports);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addReport(SmsDeliveryReportInterface $report) {
-    $this->result && $this->result->addReport($report);
-    return $this;
   }
 
 }
