@@ -3,6 +3,7 @@
 namespace Drupal\sms\Tests;
 
 use Drupal\sms\Direction;
+use Drupal\sms\Entity\SmsMessageInterface;
 use Drupal\sms\Message\SmsDeliveryReport;
 use Drupal\sms\Message\SmsMessageReportStatus;
 use Drupal\sms\Message\SmsMessageResult;
@@ -197,10 +198,10 @@ trait SmsFrameworkMessageTestTrait {
     $error_message = $this->getRandomGenerator()->string();
     $recipients = ['2345678901', '1234567890'];
     $reports = array_combine($recipients, array_map(function ($recipient) {
-        return (new SmsDeliveryReport())
-          ->setRecipient($recipient)
-          ->setStatus(SmsMessageReportStatus::DELIVERED);
-      }, $recipients));
+      return (new SmsDeliveryReport())
+        ->setRecipient($recipient)
+        ->setStatus(SmsMessageReportStatus::DELIVERED);
+    }, $recipients));
     $result = (new SmsMessageResult())
       ->setErrorMessage($error_message)
       ->setReports($reports);
@@ -209,7 +210,7 @@ trait SmsFrameworkMessageTestTrait {
       ->setResult($result);
 
     // The SmsResult entity needs to be saved first.
-    if ($sms_message instanceof \Drupal\sms\Entity\SmsMessageInterface) {
+    if ($sms_message instanceof SmsMessageInterface) {
       $sms_message->save();
     }
 

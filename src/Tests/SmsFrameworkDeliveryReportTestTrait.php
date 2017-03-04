@@ -4,6 +4,9 @@ namespace Drupal\sms\Tests;
 
 use Drupal\sms\Message\SmsDeliveryReportInterface;
 
+/**
+ * Provides common tests for SmsDeliveryReport object and entity classes.
+ */
 trait SmsFrameworkDeliveryReportTestTrait {
 
   /**
@@ -72,6 +75,23 @@ trait SmsFrameworkDeliveryReportTestTrait {
 
     $this->assertTrue($return instanceof SmsDeliveryReportInterface);
     $this->assertEquals($status_message, $report->getStatusMessage());
+  }
+
+  /**
+   * Tests status time.
+   *
+   * @covers ::getStatusTime
+   * @covers ::setStatusTime
+   */
+  public function testStatusTime() {
+    $report = $this->createDeliveryReport();
+    $this->assertNull($report->getStatusTime(), 'Default value is NULL');
+
+    $time = 123123123;
+    $return = $report->setStatusTime($time);
+
+    $this->assertTrue($return instanceof SmsDeliveryReportInterface);
+    $this->assertEquals($time, $report->getStatusTime());
   }
 
   /**

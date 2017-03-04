@@ -163,7 +163,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     if ($previous_result) {
       throw new \InvalidArgumentException('SMS message result cannot be changed or updated.');
     }
-    else if ($result) {
+    elseif ($result) {
       // Temporarily store the result so it can be retrieved without having to
       // save the message entity.
       $this->result = $result;
@@ -179,7 +179,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     if ($this->result && $report = $this->result->getReport($recipient)) {
       return $report;
     }
-    else if (!$this->isNew()) {
+    elseif (!$this->isNew()) {
       $reports = $this->entityTypeManager()
         ->getStorage('sms_report')
         ->loadByProperties([
@@ -199,7 +199,7 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     if ($this->result) {
       return $this->result->getReports();
     }
-    else if (!$this->isNew()) {
+    elseif (!$this->isNew()) {
       return array_values($this->entityTypeManager()
         ->getStorage('sms_report')
         ->loadByProperties(['sms_message' => $this->id()]));
@@ -596,11 +596,18 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
     parent::postDelete($storage, $entities);
     $results = [];
     $reports = [];
+    /** @var \Drupal\sms\Entity\SmsMessageInterface $sms_message */
     foreach ($entities as $sms_message) {
-      if ($result = $sms_message->getResult()) {
+      // Since the $sms_message can have both in-memory and stored objects, only
+      // need to delete actual stored entities.
+      if (($result = $sms_message->getResult()) && $result instanceof EntityInterface) {
         $results[] = $result;
       }
-      $reports = array_merge($reports, $sms_message->getReports());
+      foreach ($sms_message->getReports() as $report) {
+        if ($report instanceof EntityInterface) {
+          $reports[] = $report;
+        }
+      }
     }
     \Drupal::entityTypeManager()->getStorage('sms_result')->delete($results);
     \Drupal::entityTypeManager()->getStorage('sms_report')->delete($reports);
@@ -624,6 +631,8 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
           ->setSmsMessage($this)
           ->save();
       }
+      // Unset $this->result as we don't need it anymore after save.
+      unset($this->result);
     }
   }
 

@@ -7,6 +7,9 @@ use Drupal\sms\Message\SmsDeliveryReport;
 use Drupal\sms\Message\SmsDeliveryReportInterface;
 use Drupal\sms\Message\SmsMessageResultInterface;
 
+/**
+ * Provides common tests for SmsMessageResult object and entity classes.
+ */
 trait SmsFrameworkMessageResultTestTrait {
 
   /**

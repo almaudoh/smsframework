@@ -100,6 +100,8 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
 
   /**
    * Tests saving and retrieval of a complete entity.
+   *
+   * @covers ::save
    */
   public function testSaveAndRetrieveReport() {
     /** @var \Drupal\sms\Entity\SmsDeliveryReport $report */
@@ -132,6 +134,9 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
 
   /**
    * Tests saving a message result without a parent SMS message.
+   *
+   * @covers ::save
+   * @covers ::preSave
    */
   public function testSaveReportWithoutParent() {
     $this->setExpectedException(EntityStorageException::class, 'No parent SMS message specified for SMS delivery report');
@@ -159,10 +164,10 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
     $report = $this->createDeliveryReport()
       ->setSmsMessage($sms_message)
       ->setMessageId($this->randomMachineName())
-      ->setStatus(SmsMessageReportStatus::DELIVERED)
+      ->setStatus(SmsMessageReportStatus::QUEUED)
       ->setRecipient('1234567890')
       ->setStatusMessage('Message queued')
-      ->setStatusTime($time_delivered);
+      ->setStatusTime($time_queued);
     $report->save();
 
     $report
@@ -173,6 +178,49 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
 
     $this->assertEquals($time_queued, $report->getTimeQueued());
     $this->assertEquals($time_delivered, $report->getTimeDelivered());
+  }
+
+  /**
+   * Tests the multiple revisioning of delivery reports.
+   *
+   * @covers ::getRevisionAtStatus
+   */
+  public function testMultipleReportRevisions() {
+    $sms_message = SmsMessage::create();
+    $sms_message->save();
+
+    $request_time = $this->container->get('datetime.time')->getRequestTime();
+    $status_times = [
+      'queued' => $request_time,
+      'pending' => $request_time + 1800,
+      'delivered' => $request_time + 3600,
+    ];
+    /** @var \Drupal\sms\Entity\SmsDeliveryReport $report */
+    $report = $this->createDeliveryReport()
+      ->setSmsMessage($sms_message);
+
+    foreach ($status_times as $status => $time) {
+      $report
+        ->setStatus($status)
+        ->setStatusMessage('Status ' . $status)
+        ->setStatusTime($time)
+        ->save();
+    }
+
+    $this->assertEquals($status_times['queued'], $report->getRevisionAtStatus('queued')->getStatusTime());
+    $this->assertEquals($status_times['pending'], $report->getRevisionAtStatus('pending')->getStatusTime());
+    $this->assertEquals($status_times['delivered'], $report->getRevisionAtStatus('delivered')->getStatusTime());
+
+    // Create another revision with different status time.
+    $report
+      ->setStatus('queued')
+      ->setStatusTime(1234567890)
+      ->save();
+
+    // Verify that the latest revision is always returned.
+    $this->assertEquals(1234567890, $report->getRevisionAtStatus('queued')->getStatusTime());
+    $this->assertEquals($status_times['pending'], $report->getRevisionAtStatus('pending')->getStatusTime());
+    $this->assertEquals($status_times['delivered'], $report->getRevisionAtStatus('delivered')->getStatusTime());
   }
 
 }

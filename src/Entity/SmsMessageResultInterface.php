@@ -14,6 +14,7 @@ interface SmsMessageResultInterface extends PlainMessageResultInterface, Content
    * Gets the parent SMS message entity.
    *
    * @return \Drupal\sms\Entity\SmsMessageInterface
+   *   The parent SMS message entity.
    */
   public function getSmsMessage();
 

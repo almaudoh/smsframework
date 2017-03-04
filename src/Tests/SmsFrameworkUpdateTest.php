@@ -32,7 +32,7 @@ class SmsFrameworkUpdateTest extends UpdatePathTestBase {
   }
 
   /**
-   * Tests sms_update_8101
+   * Tests sms_update_8101.
    */
   public function testSmsUpdate8101() {
     $db_schema = \Drupal::database()->schema();
@@ -40,10 +40,9 @@ class SmsFrameworkUpdateTest extends UpdatePathTestBase {
     $this->assertTrue($db_schema->tableExists('sms'));
     $this->assertTrue($db_schema->tableExists('sms__recipient_phone_number'));
     $this->assertTrue($db_schema->tableExists('sms_phone_number_verification'));
-    $this->assertFalse($db_schema->fieldExists('sms', 'result'));
     $this->assertFalse($db_schema->tableExists('sms_result'));
     $this->assertFalse($db_schema->tableExists('sms_report'));
-    $this->assertFalse($db_schema->tableExists('sms_result__reports'));
+    $this->assertFalse($db_schema->tableExists('sms_report_revision'));
 
     $this->runUpdates();
 
@@ -51,10 +50,9 @@ class SmsFrameworkUpdateTest extends UpdatePathTestBase {
     $this->assertTrue($db_schema->tableExists('sms'));
     $this->assertTrue($db_schema->tableExists('sms__recipient_phone_number'));
     $this->assertTrue($db_schema->tableExists('sms_phone_number_verification'));
-    $this->assertTrue($db_schema->fieldExists('sms', 'result'));
     $this->assertTrue($db_schema->tableExists('sms_result'));
     $this->assertTrue($db_schema->tableExists('sms_report'));
-    $this->assertTrue($db_schema->tableExists('sms_result__reports'));
+    $this->assertTrue($db_schema->tableExists('sms_report_revision'));
 
     // Confirm that the existing SMS message was not clobbered.
     /** @var \Drupal\sms\Entity\SmsMessageInterface[] $sms_messages */

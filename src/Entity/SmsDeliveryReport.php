@@ -7,7 +7,6 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\sms\Message\SmsDeliveryReportInterface as PlainDeliveryReportInterface;
 use Drupal\sms\Message\SmsMessageReportStatus;
 
 /**
@@ -221,12 +220,12 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
    * Gets a revision with the specified delivery report status.
    *
    * @param string $status
-   *   Delivery report status from \Drupal\sms\Message\SmsMessageReportStatus
+   *   Delivery report status from \Drupal\sms\Message\SmsMessageReportStatus.
    *
    * @return \Drupal\sms\Entity\SmsDeliveryReportInterface|null
    *   The delivery report object with that status or null if there is none.
    */
-  protected function getRevisionAtStatus($status) {
+  public function getRevisionAtStatus($status) {
     $storage = $this->entityTypeManager()->getStorage($this->entityTypeId);
     $revision_ids = $storage->getQuery()
       ->allRevisions()
@@ -236,7 +235,7 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
       ->range(0, 1)
       ->execute();
     if ($revision_ids) {
-      return $storage->load(key($revision_ids));
+      return $storage->loadRevision(key($revision_ids));
     }
     return NULL;
   }
@@ -250,6 +249,15 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
       throw new \LogicException('No parent SMS message specified for SMS delivery report');
     }
     parent::preSave($storage);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function save() {
+    // Ensure a new revision is saved.
+    $this->setNewRevision(TRUE);
+    return parent::save();
   }
 
 }

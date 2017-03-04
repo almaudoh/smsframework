@@ -2,7 +2,6 @@
 
 namespace Drupal\sms\EventSubscriber;
 
-use Drupal\sms\Entity\SmsDeliveryReport;
 use Drupal\sms\Event\SmsDeliveryReportEvent;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -47,7 +46,6 @@ class SmsDeliveryReportsProcessor implements EventSubscriberInterface {
             ->setStatus($report->getStatus())
             ->setStatusMessage($report->getStatusMessage())
             ->setStatusTime($report->getStatusTime())
-            ->setNewRevision(TRUE)
             ->save();
         }
       }

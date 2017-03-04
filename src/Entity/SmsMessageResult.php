@@ -211,10 +211,13 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
   public static function postLoad(EntityStorageInterface $storage, array &$entities) {
     // This post-load hook is to ensure consistency of behavior of the
     // ::getReports() method by assigning the actual values from the parent SMS
-    // message entity to the temporary in-memory ::reports variable.
+    // message entity (if it exists) to the temporary in-memory $reports
+    // variable.
     /** @var \Drupal\sms\Entity\SmsMessageResultInterface $result */
     foreach ($entities as $result) {
-      $result->setReports($result->getSmsMessage()->getReports());
+      if ($result->getSmsMessage()) {
+        $result->setReports($result->getSmsMessage()->getReports());
+      }
     }
   }
 

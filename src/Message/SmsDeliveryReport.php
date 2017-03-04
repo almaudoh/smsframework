@@ -43,7 +43,7 @@ class SmsDeliveryReport implements SmsDeliveryReportInterface {
    *
    * @var int
    */
-  protected $statusTime;
+  protected $statusTime = NULL;
 
   /**
    * The timestamp when the message was queued, or NULL if unknown.
@@ -161,6 +161,7 @@ class SmsDeliveryReport implements SmsDeliveryReportInterface {
    */
   public function setStatusTime($time) {
     $this->statusTime = $time;
+    return $this;
   }
 
 }
