@@ -209,11 +209,6 @@ trait SmsFrameworkMessageTestTrait {
       ->addRecipients($recipients)
       ->setResult($result);
 
-    // The SmsResult entity needs to be saved first.
-    if ($sms_message instanceof SmsMessageInterface) {
-      $sms_message->save();
-    }
-
     $result_actual = $sms_message->getResult();
     $this->assertEquals($error_message, $result_actual->getErrorMessage());
     $this->assertEquals($result->getErrorMessage(), $result_actual->getErrorMessage());

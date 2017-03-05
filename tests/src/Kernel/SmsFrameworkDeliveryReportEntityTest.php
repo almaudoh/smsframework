@@ -133,7 +133,7 @@ class SmsFrameworkDeliveryReportEntityTest extends KernelTestBase  {
   }
 
   /**
-   * Tests saving a message result without a parent SMS message.
+   * Tests saving a delivery report without a parent SMS message.
    *
    * @covers ::save
    * @covers ::preSave
