@@ -26,6 +26,7 @@ interface SmsDeliveryReportInterface extends PlainDeliveryReportInterface, Conte
    *   The parent SMS message object.
    *
    * @return $this
+   *   Returns this report object for chaining.
    */
   public function setSmsMessage(SmsMessageInterface $sms_message);
 

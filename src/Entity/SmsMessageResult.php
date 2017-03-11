@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Exception\SmsException;
 use Drupal\sms\Message\SmsDeliveryReportInterface as PlainDeliveryReportInterface;
+use Drupal\sms\Message\SmsMessageResultInterface as StdMessageResultInterface;
 
 /**
  * Defines the SMS message result entity.
@@ -67,7 +68,7 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function getReport($recipient) {
-    foreach ($this->reports as $report) {
+    foreach ($this->getReports() as $report) {
       if ($report->getRecipient() === $recipient) {
         return $report;
       }
@@ -219,6 +220,29 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
         $result->setReports($result->getSmsMessage()->getReports());
       }
     }
+  }
+
+  /**
+   * Converts a plain SMS message result into an SMS message result entity.
+   *
+   * @param \Drupal\sms\Message\SmsMessageResultInterface $sms_result
+   *   A plain SMS message result.
+   *
+   * @return \Drupal\sms\Entity\SmsMessageResultInterface
+   *   An SMS message result entity that can be saved.
+   */
+  public static function convertFromMessageResult(StdMessageResultInterface $sms_result) {
+    if ($sms_result instanceof SmsMessageResultInterface) {
+      return $sms_result;
+    }
+    $new = SmsMessageResult::create();
+    $new
+      ->setCreditsBalance($sms_result->getCreditsBalance())
+      ->setCreditsUsed($sms_result->getCreditsUsed())
+      ->setError($sms_result->getError())
+      ->setErrorMessage($sms_result->getErrorMessage())
+      ->setReports($sms_result->getReports());
+    return $new;
   }
 
 }

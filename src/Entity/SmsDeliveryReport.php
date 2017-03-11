@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Message\SmsMessageReportStatus;
+use Drupal\sms\Message\SmsDeliveryReportInterface as StdDeliveryReportInterface;
 
 /**
  * Defines the SMS message delivery report entity.
@@ -202,7 +203,7 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
-      ->setDescription(t('The time the storage was last updated.'))
+      ->setDescription(t('The time the delivery report was last updated.'))
       ->setTranslatable(TRUE)
       ->setRevisionable(TRUE);
 
@@ -258,6 +259,29 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
     // Ensure a new revision is saved.
     $this->setNewRevision(TRUE);
     return parent::save();
+  }
+
+  /**
+   * Converts a plain SMS delivery report into an entity.
+   *
+   * @param \Drupal\sms\Message\SmsDeliveryReportInterface $sms_report
+   *   A plain SMS delivery report.
+   *
+   * @return \Drupal\sms\Entity\SmsDeliveryReportInterface
+   *   An SMS delivery report entity that can be saved.
+   */
+  public static function convertFromDeliveryReport(StdDeliveryReportInterface $sms_report) {
+    if ($sms_report instanceof SmsDeliveryReportInterface) {
+      return $sms_report;
+    }
+    $new = SmsDeliveryReport::create();
+    $new
+      ->setMessageId($sms_report->getMessageId())
+      ->setRecipient($sms_report->getRecipient())
+      ->setStatus($sms_report->getStatus())
+      ->setStatusMessage($sms_report->getStatusMessage())
+      ->setStatusTime($sms_report->getStatusTime());
+    return $new;
   }
 
 }
