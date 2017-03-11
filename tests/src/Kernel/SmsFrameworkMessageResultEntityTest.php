@@ -78,7 +78,7 @@ class SmsFrameworkMessageResultEntityTest extends KernelTestBase {
       ->setCreditsBalance(rand(10, 20))
       ->setError(SmsMessageResultStatus::INVALID_SENDER)
       ->setErrorMessage('Invalid sender ID')
-      ->setReports([(SmsDeliveryReport::create())->setRecipient('1234567890')]);
+      ->setReports([SmsDeliveryReport::create()->setRecipient('1234567890')]);
     $result->save();
   }
 

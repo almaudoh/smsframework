@@ -331,7 +331,7 @@ class SmsFrameworkMessageEntityTest extends SmsFrameworkKernelBase {
    */
   public function testCascadeDelete() {
     /** @var \Drupal\sms\Entity\SmsMessageInterface $sms_message */
-    $sms_message = (SmsMessage::create())
+    $sms_message = SmsMessage::create()
       ->setMessage($this->getRandomGenerator()->paragraphs())
       ->setGateway($this->createMemoryGateway())
       ->addRecipients($this->randomPhoneNumbers())
