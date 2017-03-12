@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\sms\Exception\SmsStorageException;
 use Drupal\sms\Message\SmsMessageReportStatus;
 use Drupal\sms\Message\SmsDeliveryReportInterface as StdDeliveryReportInterface;
 
@@ -121,8 +122,7 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
   public function setTimeQueued($time) {
     $this
       ->setStatus(SmsMessageReportStatus::QUEUED)
-      ->setStatusTime($time)
-      ->setNewRevision(TRUE);
+      ->setStatusTime($time);
     return $this;
   }
 
@@ -140,8 +140,7 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
   public function setTimeDelivered($time) {
     $this
       ->setStatus(SmsMessageReportStatus::DELIVERED)
-      ->setStatusTime($time)
-      ->setNewRevision(TRUE);
+      ->setStatusTime($time);
     return $this;
   }
 
@@ -203,7 +202,7 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
 
     $fields['changed'] = BaseFieldDefinition::create('changed')
       ->setLabel(t('Changed'))
-      ->setDescription(t('The time the delivery report was last updated.'))
+      ->setDescription(t('The time the entity was last updated.'))
       ->setTranslatable(TRUE)
       ->setRevisionable(TRUE);
 
@@ -247,7 +246,7 @@ class SmsDeliveryReport extends ContentEntityBase implements SmsDeliveryReportIn
   public function preSave(EntityStorageInterface $storage) {
     // SMS delivery report cannot be saved without a parent SMS message.
     if (!$this->getSmsMessage()) {
-      throw new \LogicException('No parent SMS message specified for SMS delivery report');
+      throw new SmsStorageException('No parent SMS message specified for SMS delivery report');
     }
     parent::preSave($storage);
   }

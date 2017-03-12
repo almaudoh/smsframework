@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\sms\Exception\SmsStorageException;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Drupal\sms\Message\SmsMessageInterface as StdSmsMessageInterface;
@@ -153,13 +154,27 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * Sets the result associated with this SMS message.
+   *
+   * Results on a saved SMS message are immutable and cannot be changed. An
+   * exception will be thrown if this method is called on an SmsMessage that
+   * already has saved results.
+   *
+   * @param \Drupal\sms\Message\SmsMessageResultInterface|NULL $result
+   *   The result to associate with this SMS message, or NULL if there is no
+   *   result.
+   *
+   * @return $this
+   *   The called SMS message object.
+   *
+   * @throws \Drupal\sms\Exception\SmsStorageException
+   *   If the SMS message entity already has saved results.
    */
   public function setResult(StdMessageResultInterface $result = NULL) {
     // Throw an exception if there is already a result for this SMS message.
     $previous_result = $this->getResult();
     if ($previous_result) {
-      throw new \InvalidArgumentException('SMS message result cannot be changed or updated.');
+      throw new SmsStorageException('Saved SMS message results cannot be changed or updated.');
     }
     elseif ($result) {
       // Temporarily store the result so it can be retrieved without having to
@@ -173,9 +188,20 @@ class SmsMessage extends ContentEntityBase implements SmsMessageInterface {
    * {@inheritdoc}
    */
   public function getReport($recipient) {
-    $reports = $this->getReports();
-    return array_key_exists($recipient, $reports) ? $reports[$recipient] : NULL;
-  }
+    // If a result has been set, check that first.
+    if ($this->result) {
+      return $this->result->getReport($recipient);
+    }
+    elseif (!$this->isNew()) {
+      $reports = $this->entityTypeManager()
+        ->getStorage('sms_report')
+        ->loadByProperties([
+          'sms_message' => $this->id(),
+          'recipient' => $recipient,
+        ]);
+      return $reports ? reset($reports) : NULL;
+    }
+    return NULL;  }
 
   /**
    * {@inheritdoc}

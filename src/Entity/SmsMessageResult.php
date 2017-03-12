@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\sms\Exception\SmsException;
+use Drupal\sms\Exception\SmsStorageException;
 use Drupal\sms\Message\SmsDeliveryReportInterface as PlainDeliveryReportInterface;
 use Drupal\sms\Message\SmsMessageResultInterface as StdMessageResultInterface;
 
@@ -80,7 +81,13 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
    * {@inheritdoc}
    */
   public function getReports() {
-    return $this->reports;
+    if ($this->reports) {
+      return $this->reports;
+    }
+    if ($this->getSmsMessage()) {
+      return $this->getSmsMessage()->getReports();
+    }
+    return [];
   }
 
   /**
@@ -201,25 +208,9 @@ class SmsMessageResult extends ContentEntityBase implements SmsMessageResultInte
   public function preSave(EntityStorageInterface $storage) {
     // SMS message result cannot be saved without a parent SMS message.
     if (!$this->getSmsMessage()) {
-      throw new \LogicException('No parent SMS message specified for SMS message result');
+      throw new SmsStorageException('No parent SMS message specified for SMS message result');
     }
     parent::preSave($storage);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function postLoad(EntityStorageInterface $storage, array &$entities) {
-    // This post-load hook is to ensure consistency of behavior of the
-    // ::getReports() method by assigning the actual values from the parent SMS
-    // message entity (if it exists) to the temporary in-memory $reports
-    // variable.
-    /** @var \Drupal\sms\Entity\SmsMessageResultInterface $result */
-    foreach ($entities as $result) {
-      if ($result->getSmsMessage()) {
-        $result->setReports($result->getSmsMessage()->getReports());
-      }
-    }
   }
 
   /**
