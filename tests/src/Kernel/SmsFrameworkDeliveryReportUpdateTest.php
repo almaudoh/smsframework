@@ -12,6 +12,11 @@ use Drupal\sms\Tests\SmsFrameworkTestTrait;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Tests the update of SMS Delivery report entities.
+ *
+ * @group SMS Framework
+ */
 class SmsFrameworkDeliveryReportUpdateTest extends KernelTestBase {
 
   use SmsFrameworkTestTrait;
