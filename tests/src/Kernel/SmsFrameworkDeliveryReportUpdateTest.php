@@ -30,13 +30,6 @@ class SmsFrameworkDeliveryReportUpdateTest extends KernelTestBase {
   ];
 
   /**
-   * The HTTP client.
-   *
-   * @var \GuzzleHttp\Client
-   */
-  protected $httpClient;
-
-  /**
    * The default SMS provider service.
    *
    * @var \Drupal\sms\Provider\SmsProviderInterface
