@@ -17,7 +17,7 @@ trait MigratePhoneNumberTestTrait {
   /**
    * Tests migration of phone number settings based on legacy configuration.
    */
-  public function _testPhoneSettingsMigration() {
+  public function testPhoneSettingsMigration() {
     $settings = PhoneNumberSettings::loadMultiple();
     $this->assertEquals([], $settings);
 
@@ -51,7 +51,7 @@ trait MigratePhoneNumberTestTrait {
   /**
    * Tests phone number migration with custom phone number verification message.
    */
-  public function _testPhoneSettingsMigrationWithCustomVerificationMessage() {
+  public function testPhoneSettingsMigrationWithCustomVerificationMessage() {
     $this->loadFixture($this->confirmationMessageFixturePath());
 
     // Execute the phone number settings migration and confirm.
