@@ -3,7 +3,6 @@
 namespace Drupal\sms\Plugin\migrate\destination;
 
 use Drupal\Core\Entity\Entity\EntityFormDisplay;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\migrate\Plugin\migrate\destination\EntityConfigBase;
 use Drupal\migrate\Row;
@@ -53,15 +52,18 @@ class PhoneNumberSettings extends EntityConfigBase {
 
     // Delete the field storage and field instance.
     FieldStorageConfig::loadByName($entity_type_id, $field_name)->delete();
-//    FieldConfig::loadByName($entity_type_id, $bundle, $field_name)->delete();
 
     // Remove the phone number settings.
     parent::rollback($destination_identifier);
   }
 
   /**
+   * Creates a phone number field.
+   *
    * @param \Drupal\sms\Entity\PhoneNumberSettingsInterface $phone_number_settings
    *   The phone number settings for a given entity type.
+   *
+   * @see \Drupal\sms\Form\PhoneNumberSettingsForm::createNewField()
    */
   protected function createPhoneNumberField(PhoneNumberSettingsInterface $phone_number_settings) {
     PhoneNumberSettingsForm::createNewField(

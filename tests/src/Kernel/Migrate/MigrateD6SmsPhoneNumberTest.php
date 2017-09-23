@@ -2,8 +2,18 @@
 
 namespace Drupal\Tests\sms\Kernel\Migrate;
 
+use Drupal\migrate\Exception\RequirementsException;
 use Drupal\Tests\migrate_drupal\Kernel\d6\MigrateDrupal6TestBase;
 
+/**
+ * Tests Drupal 6 SMS User phone number migrations.
+ *
+ * Actual tests are in the trait MigratePhoneNumberTestTrait.
+ *
+ * @group SMS Framework
+ *
+ * @see \Drupal\Tests\sms\Kernel\Migrate\MigratePhoneNumberTestTrait
+ */
 class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
 
   use MigratePhoneNumberTestTrait;
@@ -18,7 +28,15 @@ class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
   ];
 
   /**
-   * Execute the D6 sms_user phone number migration.
+   * Tests that the requirements for the d7_sms_number migration are enforced.
+   */
+  public function testMigrationRequirements() {
+    $this->setExpectedException(RequirementsException::class, 'Missing migrations d6_user, phone_number_settings.');
+    $this->getMigration('d6_sms_number')->checkRequirements();
+  }
+
+  /**
+   * Returns the list of D6 sms_user phone number migrations.
    */
   protected function getMigrationsToTest() {
     return [
@@ -30,6 +48,9 @@ class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
     ];
   }
 
+  /**
+   * Returns the list of migrations to rollback for the rollback test.
+   */
   protected function getMigrationsToRollback() {
     return [
       'd6_sms_number',

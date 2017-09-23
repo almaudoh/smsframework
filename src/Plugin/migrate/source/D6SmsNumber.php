@@ -34,11 +34,11 @@ class D6SmsNumber extends DrupalSqlBase {
     return [
       'uid' => [
         'type' => 'integer',
-         'alias' => 'su',
+        'alias' => 'su',
       ],
       'delta' => [
         'type' => 'integer',
-         'alias' => 'su',
+        'alias' => 'su',
       ],
     ];
   }
