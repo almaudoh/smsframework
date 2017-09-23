@@ -10,6 +10,7 @@ source:
     - sms_user_confirmation_message
     - sms_user_registration_form
     - sms_user_sleep
+    - user_register
   constants:
     config_id: user.user
     entity_type: user

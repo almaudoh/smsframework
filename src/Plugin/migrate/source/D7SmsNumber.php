@@ -37,7 +37,7 @@ class D7SmsNumber extends DrupalSqlBase {
     return [
       'uid' => [
         'type' => 'integer',
-         'alias' => 'su',
+        'alias' => 'su',
       ],
     ];
   }

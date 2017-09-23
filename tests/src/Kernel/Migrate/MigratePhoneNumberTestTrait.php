@@ -12,6 +12,12 @@ use Drupal\sms\Plugin\Migrate\process\PhoneNumberSettings as PhoneNumberSettings
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
+/**
+ * This trait executes tests for D6 and D7 SMS Framework migrations.
+ *
+ * @see \Drupal\Tests\sms\Kernel\Migrate\MigrateD6SmsPhoneNumberTest
+ * @see \Drupal\Tests\sms\Kernel\Migrate\MigrateD7SmsPhoneNumberTest
+ */
 trait MigratePhoneNumberTestTrait {
 
   /**
@@ -31,7 +37,7 @@ trait MigratePhoneNumberTestTrait {
     $setting = reset($settings);
     $this->assertEquals(PhoneNumberSettingsPlugin::DEFAULT_VERIFICATION_MESSAGE, $setting->getVerificationMessage());
     $this->assertEquals('phone_number', $setting->getFieldName('phone_number'));
-    $this->assertEquals(true, $setting->getPurgeVerificationPhoneNumber());
+    $this->assertEquals(TRUE, $setting->getPurgeVerificationPhoneNumber());
     $this->assertEquals('user', $setting->getPhoneNumberBundle());
     $this->assertEquals('user', $setting->getPhoneNumberEntityTypeId());
     $this->assertEquals(600, $setting->getVerificationCodeLifetime());
@@ -101,7 +107,7 @@ trait MigratePhoneNumberTestTrait {
     $this->installEntitySchema('sms');
     $this->installEntitySchema('sms_phone_number_verification');
 
-    // Create an entity form display
+    // Create an entity form display.
     EntityFormDisplay::create([
       'targetEntityType' => 'user',
       'bundle' => 'user',
@@ -182,8 +188,14 @@ trait MigratePhoneNumberTestTrait {
    */
   abstract protected function confirmationMessageFixturePath();
 
+  /**
+   * Returns the list of D6 or D7 sms_user phone number migrations.
+   */
   abstract protected function getMigrationsToTest();
 
+  /**
+   * Returns the list of migrations to rollback for the rollback test.
+   */
   abstract protected function getMigrationsToRollback();
 
 }
