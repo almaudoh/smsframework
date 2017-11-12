@@ -143,7 +143,7 @@ trait MigratePhoneNumberTestTrait {
   protected function assertVerifiedPhoneNumber(UserInterface $user, $number) {
     $phone_numbers = $this->container->get('sms.phone_number')->getPhoneNumbers($user, TRUE);
     $phone_number = reset($phone_numbers);
-    return $this->assertEquals($phone_number, $number, "Phone number '$number' is verified.");
+    return $this->assertEquals($number, $phone_number, "Phone number '$number' is verified.");
   }
 
   /**
@@ -152,7 +152,7 @@ trait MigratePhoneNumberTestTrait {
   protected function assertUnVerifiedPhoneNumber(UserInterface $user, $number) {
     $phone_numbers = $this->container->get('sms.phone_number')->getPhoneNumbers($user, FALSE);
     $phone_number = reset($phone_numbers);
-    return $this->assertEquals($phone_number, $number, "Phone number '$number' is unverified.");
+    return $this->assertEquals($number, $phone_number, "Phone number '$number' is unverified.");
   }
 
   /**
@@ -184,12 +184,17 @@ trait MigratePhoneNumberTestTrait {
   }
 
   /**
-   * Implementing classes must implement this to provide database query paths.
+   * Provides the relative path to the fixture that sets up the database.
+   */
+  abstract protected function smsUserFixtureFilePath();
+
+  /**
+   * Provides the relative path to the fixture that adds confirmation message.
    */
   abstract protected function confirmationMessageFixturePath();
 
   /**
-   * Returns the list of D6 or D7 sms_user phone number migrations.
+   * Returns the list of D6 or D7 sms_user phone number migrations to test.
    */
   abstract protected function getMigrationsToTest();
 

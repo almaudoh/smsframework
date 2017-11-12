@@ -26,7 +26,7 @@ class PhoneNumberSettings extends EntityConfigBase {
     if ($return) {
       // After successful import of the phone_number_setting, the phone number
       // field should be created and attached to the user entity type.
-      /** @var \Drupal\sms\Entity\PhoneNumberVerification $verification */
+      /** @var \Drupal\sms\Entity\PhoneNumberSettingsInterface $phone_number_setting */
       $phone_number_setting = $this->storage->load(reset($return));
       $this->createPhoneNumberField($phone_number_setting);
     }

@@ -36,7 +36,7 @@ class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
   }
 
   /**
-   * Returns the list of D6 sms_user phone number migrations.
+   * {@inheritdoc}
    */
   protected function getMigrationsToTest() {
     return [
@@ -49,7 +49,7 @@ class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
   }
 
   /**
-   * Returns the list of migrations to rollback for the rollback test.
+   * {@inheritdoc}
    */
   protected function getMigrationsToRollback() {
     return [
@@ -59,7 +59,7 @@ class MigrateD6SmsPhoneNumberTest extends MigrateDrupal6TestBase {
   }
 
   /**
-   * File path to the DB fixture for sms_user table and records.
+   * {@inheritdoc}
    */
   protected function smsUserFixtureFilePath() {
     return __DIR__ . '/../../../fixtures/migrate/sms_user_drupal6.php';
