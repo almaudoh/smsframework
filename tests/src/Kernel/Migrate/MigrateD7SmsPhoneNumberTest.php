@@ -31,12 +31,12 @@ class MigrateD7SmsPhoneNumberTest extends MigrateDrupal7TestBase {
    * Tests that the requirements for the d7_sms_number migration are enforced.
    */
   public function testMigrationRequirements() {
-    $this->setExpectedException(RequirementsException::class, 'Missing migrations d7_user, phone_number_settings.');
+    $this->setExpectedExceptionRegExp(RequirementsException::class, '/Missing migrations (d7_user|phone_number_settings), (d7_user|phone_number_settings)/');
     $this->getMigration('d7_sms_number')->checkRequirements();
   }
 
   /**
-   * Returns the list of D7 sms_user phone number migrations.
+   * {@inheritdoc}
    */
   protected function getMigrationsToTest() {
     return [
@@ -49,7 +49,7 @@ class MigrateD7SmsPhoneNumberTest extends MigrateDrupal7TestBase {
   }
 
   /**
-   * Returns the list of migrations to rollback for the rollback test.
+   * {@inheritdoc}
    */
   protected function getMigrationsToRollback() {
     return [
