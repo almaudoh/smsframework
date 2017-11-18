@@ -2,7 +2,6 @@
 
 namespace Drupal\Tests\sms\Functional;
 
-use Drupal\Core\Url;
 use Drupal\sms\Message\SmsDeliveryReportInterface;
 use Drupal\sms\Message\SmsMessageReportStatus;
 use Drupal\sms\Message\SmsMessageResultInterface;
@@ -56,10 +55,9 @@ class SmsFrameworkDeliveryReportTest extends SmsFrameworkBrowserTestBase {
    ]
 }
 EOF;
-    $client = $this->getSession()->getDriver();
-//    $client = $this->getHttpClient();
-//    return $client->request($method, $url->setAbsolute(TRUE)->toString(), $request_options);
-//    $this->drupalPost($url, 'application/json', ['delivery_report' => $delivery_report]);
+    /** @var \Symfony\Component\BrowserKit\Client $client */
+    $client = $this->getSession()->getDriver()->getClient();
+    $client->request('post', $url, ['delivery_report' => $delivery_report], [], ['content-type' => 'application/json']);
     $this->assertSession()->pageTextContains('custom response content');
     \Drupal::state()->resetCache();
 

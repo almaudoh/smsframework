@@ -3,6 +3,7 @@
 namespace Drupal\Tests\sms\Functional;
 
 use Drupal\Core\Url;
+use Drupal\Tests\Traits\Core\CronRunTrait;
 
 /**
  * Tests phone numbers.
@@ -11,6 +12,8 @@ use Drupal\Core\Url;
  * @group legacy
  */
 class SmsFrameworkPhoneNumberWidgetTest extends SmsFrameworkBrowserTestBase {
+
+  use CronRunTrait;
 
   public static $modules = ['entity_test'];
 

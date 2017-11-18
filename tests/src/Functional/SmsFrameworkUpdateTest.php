@@ -27,8 +27,8 @@ class SmsFrameworkUpdateTest extends UpdatePathTestBase {
    */
   protected function setDatabaseDumpFiles() {
     $this->databaseDumpFiles = [
-      __DIR__ . '/../../../../../core/modules/system/tests/fixtures/update/drupal-8.bare.standard.php.gz',
-      __DIR__ . '/../../tests/fixtures/update/sms-8.x-1.x-result-field-2836157.php.gz',
+      __DIR__ . '/../../../../../../core/modules/system/tests/fixtures/update/drupal-8.bare.standard.php.gz',
+      __DIR__ . '/../../../tests/fixtures/update/sms-8.x-1.x-result-field-2836157.php.gz',
     ];
   }
 
@@ -58,8 +58,8 @@ class SmsFrameworkUpdateTest extends UpdatePathTestBase {
     // Confirm that the existing SMS message was not clobbered.
     /** @var \Drupal\sms\Entity\SmsMessageInterface[] $sms_messages */
     $sms_messages = SmsMessage::loadMultiple();
-    $this->assertEqual(1, count($sms_messages));
-    $this->assertEqual(2, count($sms_messages[1]->getRecipients()));
+    $this->assertEquals(1, count($sms_messages));
+    $this->assertEquals(2, count($sms_messages[1]->getRecipients()));
     $this->assertNull($sms_messages[1]->getResult());
 
     // Create new SMS with delivery report and save it.
@@ -83,9 +83,9 @@ class SmsFrameworkUpdateTest extends UpdatePathTestBase {
     \Drupal::entityTypeManager()->getStorage('sms')->resetCache();
 
     $sms_messages = SmsMessage::loadMultiple();
-    $this->assertEqual(2, count($sms_messages));
+    $this->assertEquals(2, count($sms_messages));
     $this->assertTrue($sms_messages[2]->getResult() instanceof SmsMessageResultInterface);
-    $this->assertEqual(count($sms_message->getRecipients()), count($sms_messages[2]->getResult()->getReports()));
+    $this->assertEquals(count($sms_message->getRecipients()), count($sms_messages[2]->getResult()->getReports()));
   }
 
 }

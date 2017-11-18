@@ -195,7 +195,7 @@ class SmsFrameworkPhoneNumberAdminTest extends SmsFrameworkBrowserTestBase {
     ])->save();
 
     $edit = ['entity_bundle' => 'entity_test|entity_test'];
-    $this->drupalPostAjaxForm('admin/config/smsframework/phone_number/add', $edit, 'entity_bundle');
+    $this->drupalPostForm('admin/config/smsframework/phone_number/add', $edit, 'entity_bundle');
 
     $edit['field_mapping[phone_number]'] = $field_telephone->getName();
     $this->drupalPostForm(NULL, $edit, t('Save'));
