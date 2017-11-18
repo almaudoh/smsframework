@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sms\Tests;
+namespace Drupal\Tests\sms\Functional;
 
 use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsDeliveryReport;
@@ -8,7 +8,7 @@ use Drupal\sms\Entity\SmsMessage;
 use Drupal\sms\Entity\SmsMessageResult;
 use Drupal\sms\Entity\SmsMessageResultInterface;
 use Drupal\sms\Message\SmsMessageReportStatus;
-use Drupal\system\Tests\Update\UpdatePathTestBase;
+use Drupal\FunctionalTests\Update\UpdatePathTestBase;
 
 /**
  * Update path test coverage for sms module.

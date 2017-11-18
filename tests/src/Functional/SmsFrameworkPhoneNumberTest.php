@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sms\Tests;
+namespace Drupal\Tests\sms\Functional;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\sms\Message\SmsMessageInterface;
@@ -10,7 +10,7 @@ use Drupal\sms\Message\SmsMessageInterface;
  *
  * @group SMS Framework
  */
-class SmsFrameworkPhoneNumberTest extends SmsFrameworkWebTestBase {
+class SmsFrameworkPhoneNumberTest extends SmsFrameworkBrowserTestBase {
 
   public static $modules = ['entity_test'];
 

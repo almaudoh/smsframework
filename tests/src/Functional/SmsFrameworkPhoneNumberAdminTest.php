@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\sms\Tests;
+namespace Drupal\Tests\sms\Functional;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\entity_test\Entity\EntityTest;
@@ -13,7 +13,7 @@ use Drupal\sms\Entity\PhoneNumberVerification;
  * @group SMS Framework
  * @group legacy
  */
-class SmsFrameworkPhoneNumberAdminTest extends SmsFrameworkWebTestBase {
+class SmsFrameworkPhoneNumberAdminTest extends SmsFrameworkBrowserTestBase {
 
   public static $modules = ['block', 'entity_test'];
 
