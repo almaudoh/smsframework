@@ -1,11 +1,12 @@
 <?php
 
-namespace Drupal\sms\Tests;
+namespace Drupal\Tests\sms\Functional;
 
 use Drupal\Core\Url;
 use Drupal\Component\Utility\Unicode;
 use Drupal\sms\Direction;
 use Drupal\sms\Entity\SmsGateway;
+use Drupal\Tests\sms\Functional\SmsFrameworkBrowserTestBase;
 
 /**
  * Tests gateway administration user interface.
@@ -13,7 +14,7 @@ use Drupal\sms\Entity\SmsGateway;
  * @group SMS Framework
  * @group legacy
  */
-class SmsFrameworkGatewayAdminTest extends SmsFrameworkWebTestBase {
+class SmsFrameworkGatewayAdminTest2 extends SmsFrameworkBrowserTestBase {
 
   /**
    * Modules to enable.
