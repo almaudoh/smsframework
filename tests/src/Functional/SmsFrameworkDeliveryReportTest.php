@@ -57,7 +57,7 @@ class SmsFrameworkDeliveryReportTest extends SmsFrameworkBrowserTestBase {
 EOF;
     /** @var \Symfony\Component\BrowserKit\Client $client */
     $client = $this->getSession()->getDriver()->getClient();
-    $client->request('post', $url, ['delivery_report' => $delivery_report], [], ['content-type' => 'application/json']);
+    $client->request('post', $url, ['delivery_report' => $delivery_report]);
     $this->assertSession()->pageTextContains('custom response content');
     \Drupal::state()->resetCache();
 
