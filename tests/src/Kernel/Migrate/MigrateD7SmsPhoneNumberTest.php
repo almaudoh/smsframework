@@ -11,6 +11,7 @@ use Drupal\Tests\migrate_drupal\Kernel\d7\MigrateDrupal7TestBase;
  * Actual tests are in the trait MigratePhoneNumberTestTrait.
  *
  * @group SMS Framework
+ * @group legacy
  *
  * @see \Drupal\Tests\sms\Kernel\Migrate\MigratePhoneNumberTestTrait
  */
