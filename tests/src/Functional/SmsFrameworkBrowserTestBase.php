@@ -7,6 +7,8 @@ use Drupal\Core\Entity\Entity\EntityFormDisplay;
 use Drupal\Tests\BrowserTestBase;
 
 /**
+ * Base test class for functional browser tests.
+ *
  * Provides commonly used functionality for tests.
  */
 abstract class SmsFrameworkBrowserTestBase extends BrowserTestBase {

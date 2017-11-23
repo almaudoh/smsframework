@@ -45,8 +45,8 @@ class SmsFrameworkBrowserTest extends SmsFrameworkBrowserTestBase {
     $this->drupalLogin($this->rootUser);
     $this->drupalGet(Url::fromRoute('system.status'));
 
-    $this->assertSession()->responseContains('There are 2 messages in the incoming queue.');
-    $this->assertSession()->responseContains('There are 4 messages in the outgoing queue.');
+    $this->assertRaw('There are 2 messages in the incoming queue.');
+    $this->assertRaw('There are 4 messages in the outgoing queue.');
   }
 
 }
