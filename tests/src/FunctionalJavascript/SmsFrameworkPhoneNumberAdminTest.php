@@ -16,7 +16,7 @@ class SmsFrameworkPhoneNumberAdminTest extends JavascriptTestBase {
 
   use SmsFrameworkTestTrait;
 
-  public static $modules = ['block', 'entity_test'];
+  public static $modules = ['sms', 'block', 'entity_test'];
 
   /**
    * The entity type manager.
@@ -65,16 +65,15 @@ class SmsFrameworkPhoneNumberAdminTest extends JavascriptTestBase {
       'field_name' => $field_telephone->getName(),
     ])->save();
 
-    $driver = $this->getSession()->getDriver();
-    $driver->selectOption('[input name="entity_bundle"]', 'entity_test|entity_test');
-    $driver->wait(1000, 'false');
-    $driver->selectOption('[input name="field_mapping[phone_number]"]', $field_telephone->getName());
-    $driver->click('[input value="Save"]');
-
-//    $this->drupalPostForm('admin/config/smsframework/phone_number/add', $edit, 'entity_bundle');
-
-//    $edit['field_mapping[phone_number]'] = $field_telephone->getName();
-//    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalGet('admin/config/smsframework/phone_number/add');
+    $session = $this->assertSession();
+    $session->selectExists('entity_bundle')
+      ->selectOption('entity_test|entity_test');
+    $session->waitForElement('xpath', '//option[@value="' . $field_telephone->getName() . '"]');
+    $session->selectExists('field_mapping[phone_number]')
+      ->selectOption($field_telephone->getName());
+    $session->buttonExists('Save')
+      ->click();
 
     $this->drupalGet('admin/config/smsframework/phone_number/entity_test.entity_test');
     $this->assertResponse(200);
